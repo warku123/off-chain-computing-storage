@@ -35,7 +35,7 @@ func NewShell(mod ...ModIpfsApi) (*ipfs_api, error) {
 		fn(&api)
 	}
 
-	err := api.initSh()
+	_, err := api.initSh()
 	if err != nil {
 		return nil, err
 	}
