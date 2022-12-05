@@ -1,6 +1,7 @@
 package storage_off
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -14,7 +15,9 @@ type ipfs_api struct {
 
 	snapshot_tag string
 
-	sh *shell.Shell
+	sh      *shell.Shell
+	key     *shell.Key
+	ipns_id string
 }
 
 type ModIpfsApi func(api *ipfs_api)
@@ -58,30 +61,64 @@ func ShellWithDirTag(tag string) ModIpfsApi {
 	}
 }
 
-func (v *ipfs_api) initSh() error {
+// return IPNS id
+func (v *ipfs_api) initSh() (string, error) {
 	v.sh = shell.NewShell(fmt.Sprintf("%s:%d", v.ipfs_host, v.ipfs_port))
 
 	if len(v.snapshot_tag) == 0 {
-		return errors.New("Must have a dir.")
+		return "", errors.New("must have a dir\n")
 	}
 
 	if v.snapshot_tag[0] != '/' {
-		return errors.New("Dir must begin with \"/\".")
+		return "", errors.New("dir must begin with \"/\"\n")
 	}
 
 	dest_dir := v.snapshot_tag
 	dir_stat, err := os.Stat(dest_dir)
 	if err != nil {
-		return err
+		return "", err
 	}
-
 	dir_exist := dir_stat.IsDir()
-
 	if !dir_exist {
 		err := os.MkdirAll(v.snapshot_tag, os.ModePerm)
 		if err != nil {
-			return err
+			return "", err
 		}
+	}
+
+	table_dest_dir := fmt.Sprintf("%s/snapshot.txt", v.snapshot_tag)
+	_, err = os.Stat(table_dest_dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			_, err := os.Create(table_dest_dir)
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+
+	err = v.genIPNSkey()
+	if err != nil {
+		return "", err
+	}
+
+	cid, err := v.AddFolder(table_dest_dir)
+	if err != nil {
+		return "", err
+	}
+
+	v.ipns_id, err = v.PublishFile(cid)
+	if err != nil {
+		return "", err
+	}
+
+	return v.ipns_id, err
+}
+
+func (v *ipfs_api) genIPNSkey() (err error) {
+	v.key, err = v.sh.KeyGen(context.Background(), v.snapshot_tag)
+	if err != nil {
+		return err
 	}
 	return nil
 }
