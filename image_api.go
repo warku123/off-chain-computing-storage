@@ -147,3 +147,15 @@ func (v *ipfs_api) SearchImageByIdx(idx int64) (image string, err error) {
 	}
 	return image, nil
 }
+
+func (v *ipfs_api) SearchImageByCid(cid string) (string, error) {
+	content, err := v.sh.Cat(cid)
+	if err != nil {
+		return "", err
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(content)
+	image := buf.String()
+	return image, nil
+}
