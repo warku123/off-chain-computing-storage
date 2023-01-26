@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// 三个add函数，添加字符串、文件或文件夹，返回cid
 func (v *ipfs_api) AddString(value string) (string, error) {
 	cid, err := v.sh.Add(strings.NewReader(value))
 	fmt.Printf("added %s\n", cid)
@@ -41,6 +42,7 @@ func (v *ipfs_api) AddFolder(path string) (string, error) {
 	return cid, nil
 }
 
+// 以cid寻址文件，返回文件内容string
 func (v *ipfs_api) ReadFile(cid string) (string, error) {
 	content, err := v.sh.Cat(cid)
 	if err != nil {
@@ -53,7 +55,9 @@ func (v *ipfs_api) ReadFile(cid string) (string, error) {
 	return finalStr, nil
 }
 
+// ipns发布文件，返回ipns中的名字
 func (v *ipfs_api) PublishFile(cid string) (string, error) {
+	// 以快照的
 	key_name := v.snapshot_tag
 	response, err := v.sh.PublishWithDetails(fmt.Sprintln("/ipfs/"+cid),
 		key_name,
