@@ -6,4 +6,4 @@ off chain computing storage build by IPFS
 - data 数据部分存储
 
 ## 初始化
-初始化用`NewShell`函数，并且必须带有一个
+初始化用`NewShell`函数，并且必须带有一个以斜杠为开始的路径，用于存储索引镜像表

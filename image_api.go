@@ -55,12 +55,11 @@ func (v *ipfs_api) ReadFile(cid string) (string, error) {
 	return finalStr, nil
 }
 
-// ipns发布文件，返回ipns中的名字
-func (v *ipfs_api) PublishFile(cid string) (string, error) {
-	// 以快照的
-	key_name := v.snapshot_tag
+// ipns发布镜像，返回ipns中的名字
+func (v *ipfs_api) PublishImage(cid string) (string, error) {
+	// 这边这个函数传的key的参数，不知道是key的name还是啥
 	response, err := v.sh.PublishWithDetails(fmt.Sprintln("/ipfs/"+cid),
-		key_name,
+		v.image_key.Name,
 		24*time.Hour,
 		24*time.Hour,
 		true,
@@ -72,19 +71,22 @@ func (v *ipfs_api) PublishFile(cid string) (string, error) {
 	return response.Name, nil
 }
 
+// 存储Image的过程
 func (v *ipfs_api) NewImage(image string) (image_cid string, idx int64, err error) {
 	image_cid, err = v.AddString(image)
 	if err != nil {
 		return "", -1, err
 	}
 
-	ipns_path := fmt.Sprintf("/ipns/%s", v.ipns_id)
+	ipns_path := fmt.Sprintf("/ipns/%s", v.image_ipns_id)
 	table_dest_dir := fmt.Sprintf("%s/snapshot.txt", v.snapshot_tag)
+
+	// 先将本地的快照索引表更新
 	err = v.sh.Get(ipns_path, table_dest_dir)
 	if err != nil {
 		return "", -1, err
 	}
-
+	// 修改快照索引表
 	file, err := os.Open(table_dest_dir)
 	if err != nil {
 		return "", -1, err
@@ -114,7 +116,7 @@ func (v *ipfs_api) NewImage(image string) (image_cid string, idx int64, err erro
 		return "", -1, err
 	}
 
-	v.ipns_id, err = v.PublishFile(file_cid)
+	v.image_ipns_id, err = v.PublishImage(file_cid)
 	if err != nil {
 		return "", -1, err
 	}
@@ -123,8 +125,9 @@ func (v *ipfs_api) NewImage(image string) (image_cid string, idx int64, err erro
 }
 
 func (v *ipfs_api) SearchImageByIdx(idx int64) (image string, err error) {
-	ipns_path := fmt.Sprintf("/ipns/%s", v.ipns_id)
+	ipns_path := fmt.Sprintf("/ipns/%s", v.image_ipns_id)
 	table_dest_dir := fmt.Sprintf("%s/snapshot.txt", v.snapshot_tag)
+
 	err = v.sh.Get(ipns_path, table_dest_dir)
 	if err != nil {
 		return "", err

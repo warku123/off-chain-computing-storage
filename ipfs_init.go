@@ -13,11 +13,15 @@ type ipfs_api struct {
 	ipfs_host string
 	ipfs_port int
 
-	snapshot_tag string //标示快照名字&ipns中用来发布该快照的密钥名字&本地存储快照的文件夹
+	snapshot_tag  string // 标示快照名字&ipns中用来发布该快照的密钥名字&本地存储快照索引的文件夹父目录名
+	image_key     *shell.Key
+	image_ipns_id string
 
-	sh      *shell.Shell
-	key     *shell.Key
-	ipns_id string
+	data_key_name   string // 用于访问底层数据库的密钥名字
+	data_ipns_id    string // 底层数据库的ipns id
+	data_local_path string // 本地底层数据库位置
+
+	sh *shell.Shell
 }
 
 type ModIpfsApi func(api *ipfs_api)
@@ -63,8 +67,6 @@ func ShellWithDirTag(tag string) ModIpfsApi {
 
 // return IPNS id
 func (v *ipfs_api) initSh() (string, string, error) {
-	v.sh = shell.NewShell(fmt.Sprintf("%s:%d", v.ipfs_host, v.ipfs_port))
-
 	if len(v.snapshot_tag) == 0 {
 		return "", "", errors.New("must have a dir\n")
 	}
@@ -72,6 +74,8 @@ func (v *ipfs_api) initSh() (string, string, error) {
 	if v.snapshot_tag[0] != '/' {
 		return "", "", errors.New("dir must begin with \"/\"\n")
 	}
+
+	v.sh = shell.NewShell(fmt.Sprintf("%s:%d", v.ipfs_host, v.ipfs_port))
 
 	dest_dir := v.snapshot_tag
 	dir_stat, err := os.Stat(dest_dir)
@@ -102,21 +106,22 @@ func (v *ipfs_api) initSh() (string, string, error) {
 		return "", "", err
 	}
 
-	cid, err := v.AddFolder(v.snapshot_tag)
+	// image_ipns_cid 对应的是快照索引表
+	cid, err := v.AddFile(table_dest_dir)
 	if err != nil {
 		return "", "", err
 	}
 
-	v.ipns_id, err = v.PublishFile(cid)
+	v.image_ipns_id, err = v.PublishImage(cid)
 	if err != nil {
 		return "", "", err
 	}
 	// 这边key.Id想返回key的内容，但是不知道key里面是不是，待测试
-	return v.key.Id, v.ipns_id, err
+	return v.image_key.Id, v.image_ipns_id, err
 }
 
 func (v *ipfs_api) genIPNSkey() (err error) {
-	v.key, err = v.sh.KeyGen(context.Background(), v.snapshot_tag)
+	v.image_key, err = v.sh.KeyGen(context.Background(), v.snapshot_tag)
 	if err != nil {
 		return err
 	}
