@@ -17,11 +17,14 @@ type ipfs_api struct {
 	image_key     *shell.Key
 	image_ipns_id string
 
+	role            string // 来自计算者or验证者的任务
 	data_key_name   string // 用于访问底层数据库的密钥名字
 	data_ipns_id    string // 底层数据库的ipns id
 	data_local_path string // 本地底层数据库位置
 
 	sh *shell.Shell
+
+	data_visit_task *DBVisitTask
 }
 
 type ModIpfsApi func(api *ipfs_api)
@@ -30,9 +33,10 @@ type ModIpfsApi func(api *ipfs_api)
 // usage: NewShell(ShellWithHost, ShellWithPort...)
 func NewShell(mod ...ModIpfsApi) (*ipfs_api, error) {
 	api := ipfs_api{
-		ipfs_host:    "127.0.0.1",
-		ipfs_port:    5001,
-		snapshot_tag: "/ipfs_files",
+		ipfs_host:       "127.0.0.1",
+		ipfs_port:       5001,
+		snapshot_tag:    "/default_chain",
+		data_local_path: "/off_chain_data",
 	}
 
 	for _, fn := range mod {
@@ -65,6 +69,12 @@ func ShellWithDirTag(tag string) ModIpfsApi {
 	}
 }
 
+func ShellWithDBKeyName(key string) ModIpfsApi {
+	return func(api *ipfs_api) {
+		api.data_key_name = key
+	}
+}
+
 // return IPNS id
 func (v *ipfs_api) initSh() (string, string, error) {
 	if len(v.snapshot_tag) == 0 {
@@ -73,6 +83,14 @@ func (v *ipfs_api) initSh() (string, string, error) {
 
 	if v.snapshot_tag[0] != '/' {
 		return "", "", errors.New("dir must begin with \"/\"\n")
+	}
+
+	if len(v.data_key_name) == 0 {
+		return "", "", errors.New("must have a key to visit DB\n")
+	}
+
+	if v.role != "executer" || v.role != "verifier" {
+		return "", "", errors.New("must give a correct role\n")
 	}
 
 	v.sh = shell.NewShell(fmt.Sprintf("%s:%d", v.ipfs_host, v.ipfs_port))
