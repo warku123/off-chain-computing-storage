@@ -1,6 +1,7 @@
 package storage_off
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"strconv"
@@ -20,7 +21,7 @@ type read_variable struct {
 
 // 单次计算任务的重复访问
 type DBVisitTask struct {
-	role        string //来自计算者or验证者的任务
+	// role        string //来自计算者or验证者的任务，好像可以直接用ipfs_api中的role代替
 	read_table  []read_variable
 	write_table []write_variable
 }
@@ -52,12 +53,14 @@ func (v *ipfs_api) InitDBVisit() (err error) {
 	// if err != nil {
 	// 	return err
 	// }
-	v.data_visit_task.role = v.role
+	// 初始化DBVisitTask中的role
+	// v.data_visit_task.role = v.role
 	return nil
 }
 
 // 输入变量的键以及对应版本，返回值
 func (v *ipfs_api) ReadDB(key string, version int) (value string, err error) {
+
 	// 变量在写表中
 	for _, val := range v.data_visit_task.write_table {
 		if val.name == key {
@@ -72,23 +75,27 @@ func (v *ipfs_api) ReadDB(key string, version int) (value string, err error) {
 		}
 	}
 
-	// 变量只在db中
-	err = v.FetchFile(key, version)
-	if err != nil {
-		return "", nil
-	}
-	local_path := fmt.Sprintf("%s/%s_%s.txt", v.data_local_path, key, strconv.Itoa(version))
-	data, err := ioutil.ReadFile(local_path)
-	if err != nil {
-		fmt.Println(err)
-		return "", err
+	// 变量只在db中，仅限执行者
+	if v.role == "executer" {
+		err = v.FetchFile(key, version)
+		if err != nil {
+			return "", nil
+		}
+		local_path := fmt.Sprintf("%s/%s_%s.txt", v.data_local_path, key, strconv.Itoa(version))
+		data, err := ioutil.ReadFile(local_path)
+		if err != nil {
+			fmt.Println(err)
+			return "", err
+		}
+
+		v.data_visit_task.read_table = append(v.data_visit_task.read_table,
+			read_variable{
+				name:  key,
+				value: string(data),
+			})
+
+		return string(data), nil
 	}
 
-	v.data_visit_task.read_table = append(v.data_visit_task.read_table,
-		read_variable{
-			name:  key,
-			value: string(data),
-		})
-
-	return string(data), nil
+	return "", errors.New(fmt.Sprintf("No file %s with version %s", key, strconv.Itoa(version)))
 }

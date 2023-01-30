@@ -7,3 +7,6 @@ off chain computing storage build by IPFS
 
 ## 初始化
 初始化用`NewShell`函数，并且必须带有一个以斜杠为开始的路径，用于存储索引镜像表
+
+## 可能有的bug
+- [ ] 当前访问的image索引由索引-cid表的条目数量提供，若两个任务并发访问，可能产生一样的image_id

@@ -42,6 +42,91 @@ func (v *ipfs_api) AddFolder(path string) (string, error) {
 	return cid, nil
 }
 
+// 在IPFS上构建一个Image存储系统，有bug待改，未使用
+func (v ipfs_api) BuildImage() (string, string, error) {
+	dest_dir := v.image_local_path
+	dir_stat, err := os.Stat(dest_dir)
+	if err != nil {
+		return "", "", err
+	}
+	dir_exist := dir_stat.IsDir()
+	if !dir_exist {
+		err := os.MkdirAll(dest_dir, os.ModePerm)
+		if err != nil {
+			return "", "", err
+		}
+	}
+
+	table_dest_dir := fmt.Sprintf("%s/snapshot.txt", v.snapshot_tag)
+	_, err = os.Stat(table_dest_dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			_, err := os.Create(table_dest_dir)
+			if err != nil {
+				return "", "", err
+			}
+		}
+	}
+
+	image_key, err := v.genIPNSkey()
+	if err != nil {
+		return "", "", err
+	}
+
+	// image_ipns_cid 对应的是快照索引表
+	cid, err := v.AddFile(table_dest_dir)
+	if err != nil {
+		return "", "", err
+	}
+
+	v.image_ipns_id, err = v.PublishImage(cid)
+	if err != nil {
+		return "", "", err
+	}
+
+	// 这边key.Id想返回key的内容，但是不知道key里面是不是，待测试
+	return image_key.Id, v.image_ipns_id, err
+}
+
+// 初始化image存储，也就是下载一个索引_cid映射表
+func (v *ipfs_api) InitImage() error {
+	dest_dir := v.image_local_path
+	table_ipns_path := fmt.Sprintf("/ipns/%s", v.image_ipns_id)
+
+	// 下载远端的所有image索引-cid表到本地
+	err := v.sh.Get(table_ipns_path, dest_dir)
+	if err != nil {
+		return err
+	}
+
+	// 查看远端有没有该snapshot_tag的文件夹
+	folder_dest_dir := dest_dir + "/" + v.snapshot_tag
+	dir_stat, err := os.Stat(folder_dest_dir)
+	if err != nil {
+		return err
+	}
+	// 若没有，创建文件夹&创建表
+	dir_exist := dir_stat.IsDir()
+	if !dir_exist {
+		err := os.MkdirAll(dest_dir, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+	table_dest_dir := fmt.Sprintf("%s/snapshot.txt", folder_dest_dir)
+	_, err = os.Stat(table_dest_dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			_, err := os.Create(table_dest_dir)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 // 以cid寻址文件，返回文件内容string
 func (v *ipfs_api) ReadFile(cid string) (string, error) {
 	content, err := v.sh.Cat(cid)
@@ -59,7 +144,7 @@ func (v *ipfs_api) ReadFile(cid string) (string, error) {
 func (v *ipfs_api) PublishImage(cid string) (string, error) {
 	// 这边这个函数传的key的参数，不知道是key的name还是啥
 	response, err := v.sh.PublishWithDetails(fmt.Sprintln("/ipfs/"+cid),
-		v.image_key.Name,
+		v.image_key_name,
 		24*time.Hour,
 		24*time.Hour,
 		true,
@@ -79,7 +164,7 @@ func (v *ipfs_api) NewImage(image string) (image_cid string, idx int64, err erro
 	}
 
 	ipns_path := fmt.Sprintf("/ipns/%s", v.image_ipns_id)
-	table_dest_dir := fmt.Sprintf("%s/snapshot.txt", v.snapshot_tag)
+	table_dest_dir := fmt.Sprintf("/%s/snapshot.txt", v.snapshot_tag)
 
 	// 先将本地的快照索引表更新
 	err = v.sh.Get(ipns_path, table_dest_dir)
@@ -126,7 +211,7 @@ func (v *ipfs_api) NewImage(image string) (image_cid string, idx int64, err erro
 
 func (v *ipfs_api) SearchImageByIdx(idx int64) (image string, err error) {
 	ipns_path := fmt.Sprintf("/ipns/%s", v.image_ipns_id)
-	table_dest_dir := fmt.Sprintf("%s/snapshot.txt", v.snapshot_tag)
+	table_dest_dir := fmt.Sprintf("/%s/snapshot.txt", v.snapshot_tag)
 
 	err = v.sh.Get(ipns_path, table_dest_dir)
 	if err != nil {
