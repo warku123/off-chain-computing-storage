@@ -95,7 +95,7 @@ func (v *ipfs_api) initSh() (string, string, error) {
 	}
 
 	if v.role != "executer" && v.role != "verifier" {
-		return "", "", errors.New("must give a correct role\n")
+		return "", "", errors.New("must give a valid role 'executer' or 'verifier'\n")
 	}
 
 	// 创建IPFS访问

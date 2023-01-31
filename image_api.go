@@ -10,8 +10,8 @@ import (
 )
 
 // 三个add函数，添加字符串、文件或文件夹，返回cid
-func (v *ipfs_api) AddString(value string) (string, error) {
-	cid, err := v.sh.Add(strings.NewReader(value))
+func (v *ipfs_api) AddString(value string) (cid string, err error) {
+	cid, err = v.sh.Add(strings.NewReader(value))
 	fmt.Printf("added %s\n", cid)
 	if err != nil {
 		return "", err
@@ -19,13 +19,13 @@ func (v *ipfs_api) AddString(value string) (string, error) {
 	return cid, nil
 }
 
-func (v *ipfs_api) AddFile(path string) (string, error) {
+func (v *ipfs_api) AddFile(path string) (cid string, err error) {
 	reader, err := os.Open(path)
 	if err != nil {
 		return "", err
 	}
 
-	cid, err := v.sh.Add(reader)
+	cid, err = v.sh.Add(reader)
 	fmt.Printf("added %s\n", cid)
 	if err != nil {
 		return "", err
@@ -33,8 +33,8 @@ func (v *ipfs_api) AddFile(path string) (string, error) {
 	return cid, nil
 }
 
-func (v *ipfs_api) AddFolder(path string) (string, error) {
-	cid, err := v.sh.AddDir(path)
+func (v *ipfs_api) AddFolder(path string) (cid string, err error) {
+	cid, err = v.sh.AddDir(path)
 	fmt.Printf("added %s\n", cid)
 	if err != nil {
 		return "", err
@@ -86,6 +86,26 @@ func (v ipfs_api) BuildImage() (string, string, error) {
 
 	// 这边key.Id想返回key的内容，但是不知道key里面是不是，待测试
 	return image_key.Id, v.image_ipns_id, err
+}
+
+// 获得当前的image index
+func (v *ipfs_api) GetImageIdx(table_dest_dir string) (index int64, err error) {
+	file, err := os.Open(table_dest_dir)
+	if err != nil {
+		return -1, err
+	}
+	fd := bufio.NewReader(file)
+	count := 0
+	for {
+		_, err := fd.ReadString('\n')
+		if err != nil {
+			return -1, err
+		}
+		count++
+	}
+
+	index = int64(count) + 1
+	return index, nil
 }
 
 // 初始化image存储，也就是下载一个索引_cid映射表
@@ -164,7 +184,7 @@ func (v *ipfs_api) NewImage(image string) (image_cid string, idx int64, err erro
 	}
 
 	ipns_path := fmt.Sprintf("/ipns/%s", v.image_ipns_id)
-	table_dest_dir := fmt.Sprintf("/%s/snapshot.txt", v.snapshot_tag)
+	table_dest_dir := fmt.Sprintf("%s/%s/snapshot.txt", v.image_local_path, v.snapshot_tag)
 
 	// 先将本地的快照索引表更新
 	err = v.sh.Get(ipns_path, table_dest_dir)
@@ -172,23 +192,16 @@ func (v *ipfs_api) NewImage(image string) (image_cid string, idx int64, err erro
 		return "", -1, err
 	}
 	// 修改快照索引表
+	idx, err = v.GetImageIdx(table_dest_dir)
+	if err != nil {
+		return "", -1, err
+	}
+
 	file, err := os.Open(table_dest_dir)
 	if err != nil {
 		return "", -1, err
 	}
-	fd := bufio.NewReader(file)
-	count := 0
-	for {
-		_, err := fd.ReadString('\n')
-		if err != nil {
-			break
-		}
-		count++
-	}
-
-	idx = int64(count) + 1
 	content := fmt.Sprintf("%s\r\n", image_cid)
-
 	write := bufio.NewWriter(file)
 	write.WriteString(content)
 	//Flush将缓存的文件真正写入到文件中
@@ -211,7 +224,7 @@ func (v *ipfs_api) NewImage(image string) (image_cid string, idx int64, err erro
 
 func (v *ipfs_api) SearchImageByIdx(idx int64) (image string, err error) {
 	ipns_path := fmt.Sprintf("/ipns/%s", v.image_ipns_id)
-	table_dest_dir := fmt.Sprintf("/%s/snapshot.txt", v.snapshot_tag)
+	table_dest_dir := fmt.Sprintf("%s/%s/snapshot.txt", v.image_local_path, v.snapshot_tag)
 
 	err = v.sh.Get(ipns_path, table_dest_dir)
 	if err != nil {

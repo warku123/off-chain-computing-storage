@@ -10,3 +10,4 @@ off chain computing storage build by IPFS
 
 ## 可能有的bug
 - [ ] 当前访问的image索引由索引-cid表的条目数量提供，若两个任务并发访问，可能产生一样的image_id
+- [ ] 每次对数据库进行修改的时候没有加锁，可能导致高并发时候出现问题
