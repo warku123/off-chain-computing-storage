@@ -94,17 +94,18 @@ func (v *ipfs_api) GetImageIdx(table_dest_dir string) (index int64, err error) {
 	if err != nil {
 		return -1, err
 	}
+
 	fd := bufio.NewReader(file)
 	count := 0
 	for {
 		_, err := fd.ReadString('\n')
 		if err != nil {
-			return -1, err
+			break
 		}
 		count++
 	}
-
 	index = int64(count) + 1
+
 	return index, nil
 }
 
