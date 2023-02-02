@@ -114,6 +114,20 @@ func (v *ipfs_api) initSh() (string, string, error) {
 	return v.image_key_name, v.image_ipns_id, err
 }
 
+func (v *ipfs_api) CloseSh(image string) (err error) {
+	err = v.EndDBVisit()
+	if err != nil {
+		return err
+	}
+
+	_, _, err = v.NewImage(image)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (v *ipfs_api) genIPNSkey() (key *shell.Key, err error) {
 	key, err = v.sh.KeyGen(context.Background(), v.snapshot_tag)
 	if err != nil {
