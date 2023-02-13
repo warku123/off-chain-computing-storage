@@ -16,7 +16,7 @@ type ipfs_api struct {
 	sh *shell.Shell
 
 	// image存储部分所需变量
-	snapshot_tag     string // 标示快照名字&ipns中用来发布该快照的密钥名字&本地存储快照索引的文件夹父目录名
+	snapshot_tag     string // 链名，用于标示快照名字&本地存储快照索引的文件夹父目录名
 	image_key_name   string
 	image_ipns_id    string
 	image_local_path string
@@ -67,16 +67,28 @@ func ShellWithPort(port int) ModIpfsApi {
 	}
 }
 
-// IPFS Files system file name
-func ShellWithDirTag(tag string) ModIpfsApi {
+func ShellWithRole(role string) ModIpfsApi {
+	return func(api *ipfs_api) {
+		api.role = role
+	}
+}
+
+// Chain name in this visit
+func ShellWithTag(tag string) ModIpfsApi {
 	return func(api *ipfs_api) {
 		api.snapshot_tag = tag
 	}
 }
 
-func ShellWithDBKeyName(key string) ModIpfsApi {
+func ShellWithDataKeyName(key string) ModIpfsApi {
 	return func(api *ipfs_api) {
 		api.data_key_name = key
+	}
+}
+
+func ShellWithImageKeyName(key string) ModIpfsApi {
+	return func(api *ipfs_api) {
+		api.image_key_name = key
 	}
 }
 
