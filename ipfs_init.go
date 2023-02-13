@@ -21,7 +21,7 @@ type ipfs_api struct {
 	image_ipns_id    string
 	image_local_path string
 
-	image_idx int // image的索引，用于标识DB中的读写变量表归属于哪个任务
+	image_idx int // image的索引，自动生成，用于标识DB中的读写变量表归属于哪个任务
 
 	// data存储部分所需变量
 	role            string // 来自计算者or验证者的任务

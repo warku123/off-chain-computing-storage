@@ -1,10 +1,12 @@
 package storage_off
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strconv"
 	"time"
 )
@@ -192,5 +194,42 @@ func (v *ipfs_api) WriteDB(key string, value string) (err error) {
 			Values: []string{value},
 		})
 	}
+	return nil
+}
+
+// 验证成功后，写入持久化数据库
+func (v *ipfs_api) DataPersistence(version int) (err error) {
+	err = v.FetchDB()
+	if err != nil {
+		return err
+	}
+
+	for _, val := range v.data_visit_task.Write_table {
+		key := val.Name
+		value := val.Values[len(val.Values)-1]
+
+		local_path := fmt.Sprintf("%s/%s_%s.txt", v.data_local_path, key, strconv.Itoa(version))
+		file, err := os.OpenFile(local_path, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+		if err != nil {
+			return err
+		}
+
+		write := bufio.NewWriter(file)
+		write.WriteString(value)
+		write.Flush()
+
+		file.Close()
+	}
+
+	cid, err := v.AddFolder(v.data_local_path)
+	if err != nil {
+		return err
+	}
+
+	_, err = v.PublishDB(cid)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
