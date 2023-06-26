@@ -1,4 +1,4 @@
-package storage_off
+package image
 
 import (
 	"context"
@@ -52,6 +52,8 @@ func NewShell(mod ...ModIpfsApi) (*ipfs_api, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("New IPFS Shell created!")
 	return &api, nil
 }
 
@@ -118,10 +120,10 @@ func (v *ipfs_api) initSh() (string, string, error) {
 		return "", "", err
 	}
 
-	err = v.InitDBVisit()
-	if err != nil {
-		return "", "", err
-	}
+	// err = v.InitDBVisit()
+	// if err != nil {
+	// 	return "", "", err
+	// }
 
 	return v.image_key_name, v.image_ipns_id, err
 }

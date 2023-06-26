@@ -1,4 +1,4 @@
-package storage_off
+package image
 
 import (
 	"bufio"

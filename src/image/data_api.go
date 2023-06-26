@@ -1,4 +1,4 @@
-package storage_off
+package image
 
 import (
 	"bufio"
@@ -198,17 +198,20 @@ func (v *ipfs_api) WriteDB(key string, value string) (err error) {
 }
 
 // 验证成功后，写入持久化数据库
-func (v *ipfs_api) DataPersistence(version_list []int) (err error) {
+func (v *ipfs_api) DataPersistence(persist_key string, version int) (err error) {
 	err = v.FetchDB()
 	if err != nil {
 		return err
 	}
 
-	for idx, val := range v.data_visit_task.Write_table {
+	for _, val := range v.data_visit_task.Write_table {
 		key := val.Name
 		value := val.Values[len(val.Values)-1]
+		if key != persist_key {
+			continue
+		}
 
-		local_path := fmt.Sprintf("%s/%s_%s.txt", v.data_local_path, key, strconv.Itoa(version_list[idx]))
+		local_path := fmt.Sprintf("%s/%s_%s.txt", v.data_local_path, key, strconv.Itoa(version))
 		file, err := os.OpenFile(local_path, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 		if err != nil {
 			return err

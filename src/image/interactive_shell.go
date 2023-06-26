@@ -1,4 +1,4 @@
-package storage_off
+package image
 
 import (
 	"bufio"
@@ -67,6 +67,15 @@ func Execute_command(v *ipfs_api, command string) (out_string string, exit_signa
 			return out, false, err
 		} else {
 			return "", false, errors.New("Need 2 args to read DB")
+		}
+	case "persist":
+		if len(arr_command_args) == 3 {
+			err = v.WriteDB(arr_command_args[1], arr_command_args[2])
+			if err != nil {
+				return "", false, err
+			}
+		} else {
+			return "", false, errors.New("Need 2 args to persist data")
 		}
 	}
 	return "", false, nil
