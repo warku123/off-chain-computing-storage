@@ -8,8 +8,8 @@ import (
 
 type Ipfs_api struct {
 	// 初始化ipfs部分
-	ipfs_host string
-	ipfs_port int
+	Ipfs_host string
+	Ipfs_port int
 
 	Sh *shell.Shell
 }
@@ -18,8 +18,8 @@ type ModIpfsApi func(api *Ipfs_api)
 
 func NewShell(mod ...ModIpfsApi) (*Ipfs_api, error) {
 	api := &Ipfs_api{
-		ipfs_host: "127.0.0.1",
-		ipfs_port: 5001,
+		Ipfs_host: "127.0.0.1",
+		Ipfs_port: 5001,
 	}
 
 	for _, fn := range mod {
@@ -37,19 +37,19 @@ func NewShell(mod ...ModIpfsApi) (*Ipfs_api, error) {
 
 func (v *Ipfs_api) InitSh() error {
 	// 创建IPFS访问
-	v.Sh = shell.NewShell(fmt.Sprintf("%s:%d", v.ipfs_host, v.ipfs_port))
+	v.Sh = shell.NewShell(fmt.Sprintf("%s:%d", v.Ipfs_host, v.Ipfs_port))
 
 	return nil
 }
 
 func ShellWithHost(host string) ModIpfsApi {
 	return func(api *Ipfs_api) {
-		api.ipfs_host = host
+		api.Ipfs_host = host
 	}
 }
 
 func ShellWithPort(port int) ModIpfsApi {
 	return func(api *Ipfs_api) {
-		api.ipfs_port = port
+		api.Ipfs_port = port
 	}
 }
