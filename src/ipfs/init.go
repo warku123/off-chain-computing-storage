@@ -31,12 +31,12 @@ func NewShell(mod ...ModIpfsApi) (*Ipfs_api, error) {
 		return nil, err
 	}
 
-	fmt.Println("New IPFS Shell created!")
 	return api, nil
 }
 
 func (v *Ipfs_api) InitSh() error {
 	// 创建IPFS访问
+	defer fmt.Println("New IPFS Shell created!")
 	v.Sh = shell.NewShell(fmt.Sprintf("%s:%d", v.Ipfs_host, v.Ipfs_port))
 
 	return nil

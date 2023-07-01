@@ -1,6 +1,7 @@
 package image
 
 import (
+	"fmt"
 	"offstorage/ipfs"
 )
 
@@ -17,7 +18,19 @@ type Image_api struct {
 type ModImageApi func(api *Image_api)
 
 func NewImageShell(mod ...ModImageApi) (api *Image_api, err error) {
-	api = &Image_api{}
+	api = &Image_api{
+		ipfs_api: new(ipfs.Ipfs_api),
+	}
+
+	for _, fn := range mod {
+		fn(api)
+	}
+
+	err = api.InitImage()
+	if err != nil {
+		return nil, err
+	}
+
 	return api, nil
 }
 
@@ -57,4 +70,22 @@ func ImageWithPort(port int) ModImageApi {
 	}
 }
 
-func (v *Image_api) initImage()
+func (v *Image_api) InitImage() error {
+	defer fmt.Println("New Image Shell created!")
+	err := v.ipfs_api.InitSh()
+	if err != nil {
+		return err
+	}
+
+	dest_dir := v.image_local_path
+	table_ipns_path := fmt.Sprintf("/ipns/%s", v.image_ipns_name)
+
+	fmt.Printf("Download ImageTable %s to %s /n", table_ipns_path, dest_dir)
+
+	err = v.ipfs_api.GetFile(table_ipns_path, dest_dir)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

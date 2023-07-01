@@ -1,4 +1,4 @@
-module offstorage
+module offstorage/ipfs
 
 go 1.20
 
