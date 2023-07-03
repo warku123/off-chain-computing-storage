@@ -13,6 +13,9 @@ type Image_api struct {
 	image_key_name   string
 	image_ipns_name  string
 	image_local_path string
+
+	// Hash状态索引表
+	image_table *ImageTable
 }
 
 type ModImageApi func(api *Image_api)
