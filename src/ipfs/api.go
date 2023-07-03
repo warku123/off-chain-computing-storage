@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// 三个add函数，添加字符串、文件或文件夹，返回cid
+// 添加字符串返回cid
 func (v *Ipfs_api) AddString(value string) (cid string, err error) {
 	cid, err = v.Sh.Add(strings.NewReader(value))
 	fmt.Printf("added %s\n", cid)
@@ -18,6 +18,7 @@ func (v *Ipfs_api) AddString(value string) (cid string, err error) {
 	return cid, nil
 }
 
+// 添加文件返回cid
 func (v *Ipfs_api) AddFile(path string) (cid string, err error) {
 	reader, err := os.Open(path)
 	if err != nil {
@@ -32,6 +33,7 @@ func (v *Ipfs_api) AddFile(path string) (cid string, err error) {
 	return cid, nil
 }
 
+// 添加文件夹返回cid
 func (v *Ipfs_api) AddFolder(path string) (cid string, err error) {
 	cid, err = v.Sh.AddDir(path)
 	fmt.Printf("added %s\n", cid)
@@ -59,11 +61,10 @@ func (v *Ipfs_api) GetFile(cid string, outdir string) (err error) {
 	return err
 }
 
-// ipns发布镜像，返回ipns中的名字
+// ipns发布镜像，返回ipns中的名字，输入ipfs中cid和keyname
 func (v *Ipfs_api) PublishFile(cid, keyname string) (ipnsname string, err error) {
-	// 这边这个函数传的key的参数，不知道是key的name还是啥
 	response, err := v.Sh.PublishWithDetails(
-		fmt.Sprintln("/ipfs/"+cid),
+		fmt.Sprint("/ipfs/"+cid),
 		keyname,
 		24*time.Hour,
 		24*time.Hour,

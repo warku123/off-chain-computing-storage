@@ -12,7 +12,7 @@ func TestImageInit(t *testing.T) {
 		image.ImageWithPort(5001),
 		image.ImageWithChainName("test"),
 		image.ImageWithKeyName("image"),
-		image.ImageWithIpnsName("k51qzi5uqu5dkrnb3radxsp5xkqlx2lhuvjamm1whi93erm9ka6c2va53oaqs3"),
+		image.ImageWithIpnsName("k51qzi5uqu5di645l8hd865kitoe5o29c2skixwpkgmemw24ffd924x54dan5a"),
 		image.ImageWithLocalPath("/home/jzhang/ipfs_test/image"),
 	)
 	if err != nil {
