@@ -16,28 +16,28 @@ func (v *Image_api) PublishImageTable() (err error) {
 	return nil
 }
 
-func (v *Image_api) AddImage(image_path, timestamp string) (idx int, err error) {
-	cid, err := v.ipfs_api.AddFile(image_path)
+func (v *Image_api) AddImage(image_path, timestamp string) (cid string, idx int, err error) {
+	cid, err = v.ipfs_api.AddFile(image_path)
 	if err != nil {
-		return -1, err
+		return "", -1, err
 	}
 
 	idx, err = v.image_table.AddImageTuple(cid, timestamp, v.chain_name)
 	if err != nil {
-		return -1, err
+		return "", -1, err
 	}
 
 	err = v.image_table.SaveImageTable(image_path)
 	if err != nil {
-		return -1, err
+		return "", -1, err
 	}
 
 	err = v.PublishImageTable()
 	if err != nil {
-		return -1, err
+		return "", -1, err
 	}
 
-	return idx, nil
+	return cid, idx, nil
 }
 
 func (v *Image_api) GetImageByIdx(idx int, outdir string) (timestamp string, err error) {
