@@ -27,7 +27,8 @@ func (v *Image_api) AddImage(image_path, timestamp string) (cid string, idx int,
 		return "", -1, err
 	}
 
-	err = v.image_table.SaveImageTable(image_path)
+	image_table_path := fmt.Sprintf("%s/%s", v.image_local_path, v.image_ipns_name)
+	err = v.image_table.SaveImageTable(image_table_path)
 	if err != nil {
 		return "", -1, err
 	}

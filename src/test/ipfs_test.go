@@ -43,7 +43,7 @@ func TestIpfsPublish(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	cid, err := api.AddString("12345")
+	cid, err := api.AddString("{}")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

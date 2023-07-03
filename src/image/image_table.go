@@ -21,7 +21,7 @@ func (v *ImageTable) JsonToImageTable(image_dir string) error {
 	if err != nil {
 		return err
 	}
-
+	// fmt.Println("content" + string(content))
 	err = json.Unmarshal(content, v)
 	if err != nil {
 		return err

@@ -22,7 +22,8 @@ type ModImageApi func(api *Image_api)
 
 func NewImageShell(mod ...ModImageApi) (api *Image_api, err error) {
 	api = &Image_api{
-		ipfs_api: new(ipfs.Ipfs_api),
+		ipfs_api:    new(ipfs.Ipfs_api),
+		image_table: new(ImageTable),
 	}
 
 	for _, fn := range mod {
@@ -80,12 +81,17 @@ func (v *Image_api) InitImage() error {
 		return err
 	}
 
+	// download the image table from ipns
 	dest_dir := v.image_local_path
 	table_ipns_path := fmt.Sprintf("/ipns/%s", v.image_ipns_name)
-
 	fmt.Printf("Download ImageTable %s to %s /n", table_ipns_path, dest_dir)
-
 	err = v.ipfs_api.GetFile(table_ipns_path, dest_dir)
+	if err != nil {
+		return err
+	}
+
+	local_imagetable_path := fmt.Sprintf("%s/%s", dest_dir, v.image_ipns_name)
+	err = v.image_table.JsonToImageTable(local_imagetable_path)
 	if err != nil {
 		return err
 	}
