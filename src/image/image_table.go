@@ -2,7 +2,7 @@ package image
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 )
 
 type Image struct {
@@ -17,7 +17,7 @@ func (v *ImageTable) JsonToImageTable(image_dir string) error {
 		v = new(ImageTable)
 	}
 
-	content, err := ioutil.ReadFile(image_dir)
+	content, err := os.ReadFile(image_dir)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (v *ImageTable) ImageTableToJson() ([]byte, error) {
 }
 
 func (v *ImageTable) SaveJsonToFile(image_dir string, jsonBytes []byte) error {
-	err := ioutil.WriteFile(image_dir, jsonBytes, 0644)
+	err := os.WriteFile(image_dir, jsonBytes, 0644)
 	if err != nil {
 		return err
 	}
