@@ -14,8 +14,8 @@ func TestImageInit(t *testing.T) {
 		image.ImageWithPort(5001),
 		image.ImageWithChainName("test"),
 		image.ImageWithKeyName("test"),
-		image.ImageWithIpnsName("k51qzi5uqu5di645l8hd865kitoe5o29c2skixwpkgmemw24ffd924x54dan5a"),
-		image.ImageWithLocalPath("/home/jzhang/ipfs_test/image"),
+		image.ImageWithIpnsName("k51qzi5uqu5dh3d6te4990h45jqr4mbh4e7om7ao88pvsfhi3qct15av2gwx5p"),
+		image.ImageWithLocalPath("/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile"),
 	)
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -23,7 +23,7 @@ func TestImageInit(t *testing.T) {
 }
 
 func TestImageTableCreate(t *testing.T) {
-	image_dir := "/home/jzhang/ipfs_test/image/k51qzi5uqu5di645l8hd865kitoe5o29c2skixwpkgmemw24ffd924x54dan5a"
+	image_dir := "/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/k51qzi5uqu5dh3d6te4990h45jqr4mbh4e7om7ao88pvsfhi3qct15av2gwx5p"
 	image_api := make(image.ImageTable)
 	// image_api.AddImageTuple("hash1", "123321", "test")
 	// image_api.AddImageTuple("hash2", "123123", "test")
@@ -40,8 +40,8 @@ func TestAddImage(t *testing.T) {
 		image.ImageWithPort(5001),
 		image.ImageWithChainName("test"),
 		image.ImageWithKeyName("test"),
-		image.ImageWithIpnsName("k51qzi5uqu5di645l8hd865kitoe5o29c2skixwpkgmemw24ffd924x54dan5a"),
-		image.ImageWithLocalPath("/home/jzhang/ipfs_test/image"),
+		image.ImageWithIpnsName("k51qzi5uqu5dh3d6te4990h45jqr4mbh4e7om7ao88pvsfhi3qct15av2gwx5p"),
+		image.ImageWithLocalPath("/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile"),
 	)
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -49,7 +49,7 @@ func TestAddImage(t *testing.T) {
 
 	timestamp := time.Now().Unix()
 	cid, idx, err := image_api.AddImage(
-		"/home/jzhang/文档/research/off-chain-computing-storage/testfile/testimage.txt",
+		"/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/test1.txt",
 		fmt.Sprint(timestamp),
 	)
 	if err != nil {
@@ -59,14 +59,14 @@ func TestAddImage(t *testing.T) {
 	t.Log("cid:" + cid)
 	t.Logf("idx:%d", idx)
 
-	time, err := image_api.GetImageByIdx(idx, "/home/jzhang/文档/research/off-chain-computing-storage/testfile/download.txt")
+	time, err := image_api.GetImageByIdx(idx, "/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/download.txt")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
 
 	t.Log(timestamp, time)
 
-	err = image_api.GetImageByCid(cid, "/home/jzhang/文档/research/off-chain-computing-storage/testfile/download2.txt")
+	err = image_api.GetImageByCid(cid, "/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/download2.txt")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
