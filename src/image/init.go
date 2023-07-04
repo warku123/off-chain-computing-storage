@@ -3,19 +3,25 @@ package image
 import (
 	"fmt"
 	"offstorage/ipfs"
+
+	"github.com/cbergoon/merkletree"
 )
 
 type Image_api struct {
 	ipfs_api *ipfs.Ipfs_api
 
 	// image存储部分所需变量
-	chain_name       string // 链名，用于标示快照名字&本地存储快照索引的文件夹父目录名
+	task_name        string // 任务名，用于索引对应快照
 	image_key_name   string
 	image_ipns_name  string
 	image_local_path string
 
 	// Hash状态索引表
 	image_table *ImageTable
+	// 待优化，有点冗余，按理说只要拿出来对应task_name索引的[]Image就可以了
+
+	// Merkel树
+	merkle_tree *merkletree.MerkleTree
 }
 
 type ModImageApi func(api *Image_api)
@@ -24,6 +30,7 @@ func NewImageShell(mod ...ModImageApi) (api *Image_api, err error) {
 	api = &Image_api{
 		ipfs_api:    new(ipfs.Ipfs_api),
 		image_table: new(ImageTable),
+		merkle_tree: new(merkletree.MerkleTree),
 	}
 
 	for _, fn := range mod {
@@ -38,9 +45,9 @@ func NewImageShell(mod ...ModImageApi) (api *Image_api, err error) {
 	return api, nil
 }
 
-func ImageWithChainName(name string) ModImageApi {
+func ImageWithTaskName(name string) ModImageApi {
 	return func(api *Image_api) {
-		api.chain_name = name
+		api.task_name = name
 	}
 }
 
@@ -92,6 +99,12 @@ func (v *Image_api) InitImage() error {
 
 	local_imagetable_path := fmt.Sprintf("%s/%s", dest_dir, v.image_ipns_name)
 	err = v.image_table.JsonToImageTable(local_imagetable_path)
+	if err != nil {
+		return err
+	}
+
+	// build the merkle tree
+	err = v.BuildTree()
 	if err != nil {
 		return err
 	}

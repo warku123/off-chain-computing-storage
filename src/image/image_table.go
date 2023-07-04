@@ -60,20 +60,20 @@ func (v *ImageTable) GenEmptyImageTable(image_dir string) error {
 	return nil
 }
 
-func (v *ImageTable) AddImageTuple(hash, timestamp, chain_name string) (idx int, err error) {
+func (v *ImageTable) AddImageTuple(hash, timestamp, task_name string) (idx int, err error) {
 	image := Image{
 		Hash:      hash,
 		Timestamp: timestamp,
 	}
 
-	idx = len((*v)[chain_name])
-	(*v)[chain_name] = append((*v)[chain_name], image)
+	idx = len((*v)[task_name])
+	(*v)[task_name] = append((*v)[task_name], image)
 
 	return idx, nil
 }
 
-func (v *ImageTable) GetImageTuple(chain_name string, idx int) (hash, timestamp string, err error) {
-	image_tuple := (*v)[chain_name][idx]
+func (v *ImageTable) GetImageTuple(task_name string, idx int) (hash, timestamp string, err error) {
+	image_tuple := (*v)[task_name][idx]
 
 	return image_tuple.Hash, image_tuple.Timestamp, nil
 }

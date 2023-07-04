@@ -22,7 +22,7 @@ func (v *Image_api) AddImage(image_path, timestamp string) (cid string, idx int,
 		return "", -1, err
 	}
 
-	idx, err = v.image_table.AddImageTuple(cid, timestamp, v.chain_name)
+	idx, err = v.image_table.AddImageTuple(cid, timestamp, v.task_name)
 	if err != nil {
 		return "", -1, err
 	}
@@ -38,11 +38,17 @@ func (v *Image_api) AddImage(image_path, timestamp string) (cid string, idx int,
 		return "", -1, err
 	}
 
+	// build merkle tree
+	err = v.BuildTree()
+	if err != nil {
+		return "", -1, err
+	}
+
 	return cid, idx, nil
 }
 
 func (v *Image_api) GetImageByIdx(idx int, outdir string) (timestamp string, err error) {
-	cid, timestamp, err := v.image_table.GetImageTuple(v.chain_name, idx)
+	cid, timestamp, err := v.image_table.GetImageTuple(v.task_name, idx)
 	if err != nil {
 		return "", err
 	}
