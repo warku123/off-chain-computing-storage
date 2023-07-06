@@ -1,9 +1,7 @@
 package image
 
 import (
-	"encoding/json"
 	"offstorage/json_op"
-	"os"
 )
 
 type Image struct {
@@ -12,40 +10,6 @@ type Image struct {
 }
 
 type ImageTable map[string][]Image
-
-func (v *ImageTable) JsonToImageTable(image_dir string) error {
-	if v == nil {
-		v = new(ImageTable)
-	}
-
-	content, err := os.ReadFile(image_dir)
-	if err != nil {
-		return err
-	}
-	// fmt.Println("content" + string(content))
-	err = json.Unmarshal(content, v)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (v *ImageTable) ImageTableToJson() ([]byte, error) {
-	jsonBytes, err := json.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-
-	return jsonBytes, nil
-}
-
-func (v *ImageTable) SaveJsonToFile(image_dir string, jsonBytes []byte) error {
-	err := os.WriteFile(image_dir, jsonBytes, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 func (v *ImageTable) GenEmptyImageTable(image_dir string) error {
 	v = new(ImageTable)
