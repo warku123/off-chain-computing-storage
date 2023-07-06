@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -64,7 +65,7 @@ func (v *Ipfs_api) GetFile(cid string, outdir string) (err error) {
 // ipns发布镜像，返回ipns中的名字，输入ipfs中cid和keyname
 func (v *Ipfs_api) PublishFile(cid, keyname string) (ipnsname string, err error) {
 	response, err := v.Sh.PublishWithDetails(
-		fmt.Sprint("/ipfs/"+cid),
+		filepath.Join("/ipfs/", cid),
 		keyname,
 		24*time.Hour,
 		24*time.Hour,

@@ -2,6 +2,7 @@ package image
 
 import (
 	"encoding/json"
+	"offstorage/json_op"
 	"os"
 )
 
@@ -48,12 +49,12 @@ func (v *ImageTable) SaveJsonToFile(image_dir string, jsonBytes []byte) error {
 
 func (v *ImageTable) GenEmptyImageTable(image_dir string) error {
 	v = new(ImageTable)
-	jsonBytes, err := v.ImageTableToJson()
+	jsonBytes, err := json_op.TableToJson(v)
 	if err != nil {
 		return err
 	}
 
-	err = v.SaveJsonToFile(image_dir, jsonBytes)
+	err = json_op.SaveJsonToFile(image_dir, jsonBytes)
 	if err != nil {
 		return err
 	}
@@ -79,11 +80,11 @@ func (v *ImageTable) GetImageTuple(task_name string, idx int) (hash, timestamp s
 }
 
 func (v *ImageTable) SaveImageTable(image_dir string) error {
-	jsonBytes, err := v.ImageTableToJson()
+	jsonBytes, err := json_op.TableToJson(v)
 	if err != nil {
 		return err
 	}
-	err = v.SaveJsonToFile(image_dir, jsonBytes)
+	err = json_op.SaveJsonToFile(image_dir, jsonBytes)
 	if err != nil {
 		return err
 	}

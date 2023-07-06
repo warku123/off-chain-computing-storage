@@ -1,9 +1,11 @@
 package image
 
-import "fmt"
+import (
+	"path/filepath"
+)
 
 func (v *Image_api) PublishImageTable() (err error) {
-	image_dir := fmt.Sprintf("%s/%s", v.image_local_path, v.image_ipns_name)
+	image_dir := filepath.Join(v.image_local_path, v.image_ipns_name)
 	image_table_cid, err := v.ipfs_api.AddFile(image_dir)
 	if err != nil {
 		return err
@@ -27,7 +29,7 @@ func (v *Image_api) AddImage(image_path, timestamp string) (cid string, idx int,
 		return "", -1, err
 	}
 
-	image_table_path := fmt.Sprintf("%s/%s", v.image_local_path, v.image_ipns_name)
+	image_table_path := filepath.Join(v.image_local_path, v.image_ipns_name)
 	err = v.image_table.SaveImageTable(image_table_path)
 	if err != nil {
 		return "", -1, err

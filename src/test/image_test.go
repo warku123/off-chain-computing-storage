@@ -49,7 +49,7 @@ func TestAddImage(t *testing.T) {
 
 	timestamp := time.Now().Unix()
 	cid, idx, err := image_api.AddImage(
-		"/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/test1.txt",
+		"/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/test.txt",
 		fmt.Sprint(timestamp),
 	)
 	if err != nil {

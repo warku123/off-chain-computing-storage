@@ -3,6 +3,8 @@ package image
 import (
 	"fmt"
 	"offstorage/ipfs"
+	"offstorage/json_op"
+	"path/filepath"
 
 	"github.com/cbergoon/merkletree"
 )
@@ -90,15 +92,15 @@ func (v *Image_api) InitImage() error {
 
 	// download the image table from ipns
 	dest_dir := v.image_local_path
-	table_ipns_path := fmt.Sprintf("/ipns/%s", v.image_ipns_name)
+	table_ipns_path := filepath.Join("/ipns/", v.image_ipns_name)
 	fmt.Printf("Download ImageTable %s to %s \n", table_ipns_path, dest_dir)
 	err = v.ipfs_api.GetFile(table_ipns_path, dest_dir)
 	if err != nil {
 		return err
 	}
 
-	local_imagetable_path := fmt.Sprintf("%s/%s", dest_dir, v.image_ipns_name)
-	err = v.image_table.JsonToImageTable(local_imagetable_path)
+	local_imagetable_path := filepath.Join(dest_dir, v.image_ipns_name)
+	err = json_op.JsonToTable(local_imagetable_path, v.image_table)
 	if err != nil {
 		return err
 	}
