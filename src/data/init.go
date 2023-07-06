@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"offstorage/ipfs"
+	"offstorage/json_op"
 	"path/filepath"
 
 	"github.com/google/uuid"
@@ -98,9 +99,28 @@ func (v *Data_api) InitData() (err error) {
 		return err
 	}
 
+	// 下载整个DB目录
 	dest_dir := v.data_local_path
 	table_ipns_path := filepath.Join("/ipns/", v.data_ipns_name)
 	fmt.Printf("Download DB %s to %s \n", table_ipns_path, dest_dir)
+
+	err = v.ipfs_api.GetFile(table_ipns_path, dest_dir)
+	if err != nil {
+		return err
+	}
+
+	table_dir := filepath.Join(dest_dir, "tables", v.task_id)
+	if v.role == "verifier" {
+		err = json_op.JsonToTable(table_dir, v.tables)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = json_op.GenEmptyTable(table_dir)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

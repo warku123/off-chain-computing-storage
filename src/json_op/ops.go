@@ -27,8 +27,16 @@ func TableToJson(v any) ([]byte, error) {
 	return jsonBytes, nil
 }
 
-func SaveJsonToFile(image_dir string, jsonBytes []byte) error {
-	err := os.WriteFile(image_dir, jsonBytes, 0644)
+func SaveJsonToFile(dir string, jsonBytes []byte) error {
+	err := os.WriteFile(dir, jsonBytes, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GenEmptyTable(dir string) error {
+	err := os.WriteFile(dir, []byte("{}"), 0644)
 	if err != nil {
 		return err
 	}
