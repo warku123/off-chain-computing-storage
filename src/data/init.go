@@ -144,3 +144,29 @@ func (v *Data_api) InitData() (err error) {
 
 	return nil
 }
+
+func (v *Data_api) CloseImage() (err error) {
+	var table_path string
+	if v.role == "executer" {
+		table_path = filepath.Join(v.data_local_path, v.data_ipns_name, "executer", v.task_id)
+	} else {
+		table_path = filepath.Join(v.data_local_path, v.data_ipns_name, "verifier", v.task_id+v.v_task_id)
+	}
+	json_bytes, err := json_op.TableToJson(v.tables)
+	if err != nil {
+		return err
+	}
+
+	err = json_op.SaveJsonToFile(table_path, json_bytes)
+	if err != nil {
+		return err
+	}
+
+	// 上传table
+	_, err = v.SyncDataToIPFS()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
