@@ -27,11 +27,13 @@ func (v *Data_api) SyncDataToIPFS() (ipns_name string, err error) {
 	table_ipns_path := filepath.Join("/ipns/", v.data_ipns_name)
 	fmt.Printf("Upload DB %s to %s \n", src_dir, table_ipns_path)
 
+	// Upload db
 	cid, err := v.ipfs_api.AddFile(table_local_path)
 	if err != nil {
 		return "", err
 	}
 
+	// Publish db
 	ipns_name, err = v.ipfs_api.PublishFile(cid, v.data_key_name)
 	if err != nil {
 		return "", err
