@@ -2,10 +2,17 @@
 ```sh
 Data部分数据存储文件夹结构
 data_local_path/data_ipns_name
-├── DB
-└── tables
-    ├── task_id1.json
-    ├── task_id2.json
-    └── task_id3.json
+├── db
+├── excuter
+│   ├── id1.json
+│   ├── id2.json
+│   └── id3.json
+└── verfier
+    ├── id1_vid1.json
+    ├── id1_vid2.json
+    └── id1_vid3.json
+
+executer里存储读表+写表
+verifier里仅存储写表，用于验证者的写入
 
 ```

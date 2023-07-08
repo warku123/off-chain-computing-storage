@@ -113,3 +113,7 @@ func (v *Image_api) InitImage() error {
 
 	return nil
 }
+
+func (v *Image_api) CloseImage() error {
+	return nil
+}

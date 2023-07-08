@@ -2,7 +2,6 @@ package data
 
 import (
 	"errors"
-	"fmt"
 	"offstorage/ipfs"
 	"offstorage/json_op"
 	"path/filepath"
@@ -17,12 +16,17 @@ type Data_api struct {
 	data_ipns_name  string // 底层数据库的ipns id
 	data_local_path string // 本地底层数据库位置
 
-	task_id string // 读写任务id
+	task_id   string // 计算者任务id
+	v_task_id string // 验证者任务id
 
 	// IPFS Shell
 	ipfs_api *ipfs.Ipfs_api
 
+	// Read and Write table
 	tables *DBVisitTask
+
+	// Whole data table
+	db *Data_table
 }
 
 type ModDataApi func(api *Data_api)
@@ -31,6 +35,7 @@ func NewDataShell(mod ...ModDataApi) (api *Data_api, err error) {
 	api = &Data_api{
 		ipfs_api: new(ipfs.Ipfs_api),
 		tables:   new(DBVisitTask),
+		db:       new(Data_table),
 	}
 
 	for _, fn := range mod {
@@ -81,6 +86,12 @@ func DataWithPort(port int) ModDataApi {
 	}
 }
 
+func DataWithTaskID(id string) ModDataApi {
+	return func(api *Data_api) {
+		api.task_id = id
+	}
+}
+
 func (v *Data_api) InitData() (err error) {
 	if v.role != "executer" && v.role != "verifier" {
 		return errors.New("must give a valid role 'executer' or 'verifier'")
@@ -89,37 +100,46 @@ func (v *Data_api) InitData() (err error) {
 	if v.role == "executer" {
 		v.task_id = uuid.New().String()
 	} else {
+		v.v_task_id = uuid.New().String()
 		if len(v.task_id) != 16 {
 			return errors.New("must give a valid task id")
 		}
 	}
 
+	// 初始化ipfs shell
 	err = v.ipfs_api.InitSh()
 	if err != nil {
 		return err
 	}
 
-	// 下载整个DB目录
-	dest_dir := v.data_local_path
-	table_ipns_path := filepath.Join("/ipns/", v.data_ipns_name)
-	fmt.Printf("Download DB %s to %s \n", table_ipns_path, dest_dir)
-
-	err = v.ipfs_api.GetFile(table_ipns_path, dest_dir)
+	// 下载整个Data存储
+	err = v.GetDataFromIPFS()
 	if err != nil {
 		return err
 	}
 
-	table_dir := filepath.Join(dest_dir, "tables", v.task_id)
+	// 读取tables
+	table_dir := filepath.Join(v.data_local_path, v.data_ipns_name, "executer", v.task_id)
 	if v.role == "verifier" {
+		// 读读写表
 		err = json_op.JsonToTable(table_dir, v.tables)
 		if err != nil {
 			return err
 		}
+		// 清空写表
+		v.tables.Write_table = make(map[string]write_variable)
 	} else {
 		err = json_op.GenEmptyTable(table_dir)
 		if err != nil {
 			return err
 		}
+	}
+
+	// 读取db
+	db_dir := filepath.Join(v.data_local_path, v.data_ipns_name, "db")
+	err = json_op.JsonToTable(db_dir, v.db)
+	if err != nil {
+		return err
 	}
 
 	return nil
