@@ -150,7 +150,7 @@ func (v *Data_api) CloseImage() (err error) {
 	if v.role == "executer" {
 		table_path = filepath.Join(v.data_local_path, v.data_ipns_name, "executer", v.task_id)
 	} else {
-		table_path = filepath.Join(v.data_local_path, v.data_ipns_name, "verifier", v.task_id+v.v_task_id)
+		table_path = filepath.Join(v.data_local_path, v.data_ipns_name, "verifier", v.task_id+"_"+v.v_task_id)
 	}
 	json_bytes, err := json_op.TableToJson(v.tables)
 	if err != nil {
