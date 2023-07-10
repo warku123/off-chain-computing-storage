@@ -93,16 +93,18 @@ func DataWithTaskID(id string) ModDataApi {
 }
 
 func (v *Data_api) InitData() (err error) {
-	if v.role != "executer" && v.role != "verifier" {
-		return errors.New("must give a valid role 'executer' or 'verifier'")
+	if v.role != "executer" && v.role != "verifier" && v.role != "judge" {
+		return errors.New("must give a valid role 'executer'/'verifier'/'judge'")
 	}
 
 	if v.role == "executer" {
 		v.task_id = uuid.New().String()
 	} else {
-		v.v_task_id = uuid.New().String()
 		if len(v.task_id) != 16 {
 			return errors.New("must give a valid task id")
+		}
+		if v.role == "verifier" {
+			v.v_task_id = uuid.New().String()
 		}
 	}
 
@@ -120,18 +122,20 @@ func (v *Data_api) InitData() (err error) {
 
 	// 读取tables
 	table_dir := filepath.Join(v.data_local_path, v.data_ipns_name, "executer", v.task_id)
-	if v.role == "verifier" {
+	if v.role == "executer" {
+		err = json_op.GenEmptyTable(table_dir)
+		if err != nil {
+			return err
+		}
+	} else {
 		// 读读写表
 		err = json_op.JsonToTable(table_dir, v.tables)
 		if err != nil {
 			return err
 		}
-		// 清空写表
-		v.tables.Write_table = make(map[string]write_variable)
-	} else {
-		err = json_op.GenEmptyTable(table_dir)
-		if err != nil {
-			return err
+		if v.role == "verifier" {
+			// 清空写表
+			v.tables.Write_table = make(map[string]write_variable)
 		}
 	}
 
@@ -146,6 +150,7 @@ func (v *Data_api) InitData() (err error) {
 }
 
 func (v *Data_api) CloseImage() (err error) {
+	// 链上judge的逻辑还没加
 	var table_path string
 	if v.role == "executer" {
 		table_path = filepath.Join(v.data_local_path, v.data_ipns_name, "executer", v.task_id)

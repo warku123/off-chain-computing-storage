@@ -50,7 +50,7 @@ func (v *Data_api) GetDataCid(name string) (cid string, err error) {
 
 	// Data in read table
 	if entry, ok := v.tables.Read_table[name]; ok {
-		return string(entry), nil
+		return entry.Value, nil
 	}
 
 	// Neither in read table nor in write table
@@ -75,9 +75,12 @@ func (v *Data_api) GetDataCid(name string) (cid string, err error) {
 		return "", err
 	}
 	cid = v.db.GetCid(name, data_length-1)
-	v.db.AddReadNum(name, data_length-1)
+	err = v.db.AddReadNum(name, data_length-1)
+	if err != nil {
+		return "", err
+	}
 
-	v.tables.AddReadTuple(name, cid)
+	v.tables.AddReadTuple(name, cid, data_length-1)
 
 	// 可以并行，待优化
 	_, err = v.SyncDataToIPFS()
@@ -108,6 +111,16 @@ func (v *Data_api) AddData(name string, value string) (err error) {
 
 	// Add data to write table
 	v.tables.AddWriteTuple(name, cid)
+	err = v.db.AddWriteNum(name)
+	if err != nil {
+		return err
+	}
+
+	// 可以并行，待优化
+	_, err = v.SyncDataToIPFS()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
