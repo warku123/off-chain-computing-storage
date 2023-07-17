@@ -98,6 +98,9 @@ func (v *Data_api) InitData() (err error) {
 	}
 
 	if v.role == "executer" {
+		if len(v.task_id) != 0 {
+			return errors.New("executer must not give a task id")
+		}
 		v.task_id = uuid.New().String()
 	} else {
 		if len(v.task_id) != 16 {
@@ -121,9 +124,11 @@ func (v *Data_api) InitData() (err error) {
 	}
 
 	// 读取tables
-	table_dir := filepath.Join(v.data_local_path, v.data_ipns_name, "executer", v.task_id)
+	table_dir := filepath.Join(v.data_local_path, "executer", v.task_id)
 	if v.role == "executer" {
 		err = json_op.GenEmptyTable(table_dir)
+		v.tables.Read_table = make(map[string]read_variable)
+		v.tables.Write_table = make(map[string]write_variable)
 		if err != nil {
 			return err
 		}
@@ -140,7 +145,7 @@ func (v *Data_api) InitData() (err error) {
 	}
 
 	// 读取db
-	db_dir := filepath.Join(v.data_local_path, v.data_ipns_name, "db")
+	db_dir := filepath.Join(v.data_local_path, "db")
 	err = json_op.JsonToTable(db_dir, v.db)
 	if err != nil {
 		return err
@@ -150,19 +155,14 @@ func (v *Data_api) InitData() (err error) {
 }
 
 func (v *Data_api) CloseImage() (err error) {
-	// 链上judge的逻辑还没加
+	// judge的逻辑还没加
 	var table_path string
 	if v.role == "executer" {
-		table_path = filepath.Join(v.data_local_path, v.data_ipns_name, "executer", v.task_id)
+		table_path = filepath.Join(v.data_local_path, "executer", v.task_id)
 	} else {
-		table_path = filepath.Join(v.data_local_path, v.data_ipns_name, "verifier", v.task_id+"_"+v.v_task_id)
+		table_path = filepath.Join(v.data_local_path, "verifier", v.task_id, v.v_task_id)
 	}
-	json_bytes, err := json_op.TableToJson(v.tables)
-	if err != nil {
-		return err
-	}
-
-	err = json_op.SaveJsonToFile(table_path, json_bytes)
+	err = json_op.SaveTable(table_path, v.tables)
 	if err != nil {
 		return err
 	}

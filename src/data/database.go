@@ -8,18 +8,40 @@ type Data struct {
 }
 
 type Data_entry struct {
-	Data_tuples []Data `json:"data_tuples"` // 若使用list存储，gc时候必须没有任务在执行，否则gc后会导致正在进行的任务读写index发生变化，导致读取错误数据
+	Data_tuples []Data `json:"data_tuples"`
 	Write_num   int    `json:"write_num"`
+	Gc_offset   int    `json:"gc_offset"` // 因为gc导致的index不对齐，需要一个偏移量调整
 }
+
+// 真正的要读取的index是version-offset
+// 因此GetDataVersionNum时候是数组+偏移量
 
 type Data_table map[string]Data_entry
 
 func (v *Data_table) AddCid(name, hash string) (err error) {
+	// 存在该key
 	if entry, ok := (*v)[name]; ok {
-		entry.Data_tuples = append(entry.Data_tuples, Data{
-			Value_hash: hash,
-			Read_num:   0,
-		})
+		if entry.Write_num == 0 {
+			// 因为修改写表时Writenum+1，所以不会出现0的情况
+			return errors.New("add cid: write num is 0")
+		} else if entry.Write_num == 1 {
+			// 说明写入时没有其他写入任务，但是是新建数据
+			if len(entry.Data_tuples) == 0 {
+				entry.Data_tuples = append(entry.Data_tuples, Data{
+					Value_hash: hash,
+					Read_num:   0,
+				})
+			}
+			// 说明写入时没有其他写入任务，直接修改最后一个版本数据
+			entry.Data_tuples[len(entry.Data_tuples)-1].Value_hash = hash
+		} else {
+			// 说明写入时有其他写入任务，需要新建一个版本数据
+			entry.Data_tuples = append(entry.Data_tuples, Data{
+				Value_hash: hash,
+				Read_num:   0,
+			})
+		}
+		(*v)[name] = entry
 	} else {
 		(*v)[name] = Data_entry{
 			Data_tuples: []Data{
@@ -35,7 +57,8 @@ func (v *Data_table) AddCid(name, hash string) (err error) {
 }
 
 func (v *Data_table) GetCid(name string, version int) string {
-	return (*v)[name].Data_tuples[version].Value_hash
+	offset := (*v)[name].Gc_offset
+	return (*v)[name].Data_tuples[version-offset].Value_hash
 }
 
 func (v *Data_table) AddWriteNum(name string) error {
@@ -45,6 +68,7 @@ func (v *Data_table) AddWriteNum(name string) error {
 		(*v)[name] = Data_entry{
 			Data_tuples: []Data{},
 			Write_num:   1,
+			Gc_offset:   0,
 		}
 	}
 	return nil
@@ -59,23 +83,26 @@ func (v *Data_table) ReduceWriteNum(name string) error {
 	return nil
 }
 
+// 某数据总共的版本数量
 func (v *Data_table) GetDataVersionNum(name string) (int, error) {
 	if _, ok := (*v)[name]; ok {
-		return len((*v)[name].Data_tuples), nil
+		return len((*v)[name].Data_tuples) + (*v)[name].Gc_offset, nil
 	} else {
 		return 0, errors.New("GetDataVersionNum: no such data entry")
 	}
 }
 
 func (v *Data_table) AddReadNum(name string, version int) (err error) {
-	(*v)[name].Data_tuples[version].Read_num++
+	offset := (*v)[name].Gc_offset
+	(*v)[name].Data_tuples[version-offset].Read_num++
 	return nil
 }
 
 func (v *Data_table) ReduceReadNum(name string, version int) (err error) {
-	if (*v)[name].Data_tuples[version].Read_num <= 0 {
+	offset := (*v)[name].Gc_offset
+	if (*v)[name].Data_tuples[version-offset].Read_num <= 0 {
 		return errors.New("ReduceReadNum: read num <= 0")
 	}
-	(*v)[name].Data_tuples[version].Read_num--
+	(*v)[name].Data_tuples[version-offset].Read_num--
 	return nil
 }

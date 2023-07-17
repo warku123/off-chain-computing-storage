@@ -23,12 +23,11 @@ func (v *Data_api) GetDataFromIPFS() (err error) {
 func (v *Data_api) SyncDataToIPFS() (ipns_name string, err error) {
 	// 上传整个DB目录
 	src_dir := v.data_local_path
-	table_local_path := filepath.Join(src_dir, v.data_ipns_name)
 	table_ipns_path := filepath.Join("/ipns/", v.data_ipns_name)
 	fmt.Printf("Upload DB %s to %s \n", src_dir, table_ipns_path)
 
 	// Upload db
-	cid, err := v.ipfs_api.AddFile(table_local_path)
+	cid, err := v.ipfs_api.AddFolder(src_dir)
 	if err != nil {
 		return "", err
 	}
@@ -64,29 +63,29 @@ func (v *Data_api) GetDataCid(name string) (cid string, err error) {
 		return "", err
 	}
 
-	db_dir := filepath.Join(v.data_local_path, v.data_ipns_name, "db")
+	db_dir := filepath.Join(v.data_local_path, "db")
 	err = json_op.JsonToTable(db_dir, v.db)
 	if err != nil {
 		return "", err
 	}
 
-	data_length, err := v.db.GetDataVersionNum(name)
+	data_version, err := v.db.GetDataVersionNum(name)
 	if err != nil {
 		return "", err
 	}
-	cid = v.db.GetCid(name, data_length-1)
-	err = v.db.AddReadNum(name, data_length-1)
+	cid = v.db.GetCid(name, data_version-1)
+	err = v.db.AddReadNum(name, data_version-1)
 	if err != nil {
 		return "", err
 	}
 
-	v.tables.AddReadTuple(name, cid, data_length-1)
+	v.tables.AddReadTuple(name, cid, data_version-1)
 
-	// 可以并行，待优化
-	_, err = v.SyncDataToIPFS()
-	if err != nil {
-		return "", err
-	}
+	// 可以并行，待优化，应该最后持久化
+	// _, err = v.SyncDataToIPFS()
+	// if err != nil {
+	// 	return "", err
+	// }
 
 	return cid, nil
 }
@@ -100,6 +99,7 @@ func (v *Data_api) GetData(name string) (value string, err error) {
 	if err != nil {
 		return "", err
 	}
+
 	return value, nil
 }
 
@@ -116,11 +116,12 @@ func (v *Data_api) AddData(name string, value string) (err error) {
 		return err
 	}
 
+	// 不在此处sync，最后close session时候统一sync
 	// 可以并行，待优化
-	_, err = v.SyncDataToIPFS()
-	if err != nil {
-		return err
-	}
+	// _, err = v.SyncDataToIPFS()
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

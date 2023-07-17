@@ -42,3 +42,15 @@ func GenEmptyTable(dir string) error {
 	}
 	return nil
 }
+
+func SaveTable(dir string, v any) error {
+	jsonBytes, err := TableToJson(v)
+	if err != nil {
+		return err
+	}
+	err = SaveJsonToFile(dir, jsonBytes)
+	if err != nil {
+		return err
+	}
+	return nil
+}
