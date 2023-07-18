@@ -4,6 +4,7 @@ import (
 	"errors"
 	"offstorage/ipfs"
 	"offstorage/json_op"
+	"os"
 	"path/filepath"
 
 	"github.com/google/uuid"
@@ -31,7 +32,7 @@ type Data_api struct {
 
 type ModDataApi func(api *Data_api)
 
-func NewDataShell(mod ...ModDataApi) (api *Data_api, err error) {
+func NewDataShell(mod ...ModDataApi) (api *Data_api, task_id string, err error) {
 	api = &Data_api{
 		ipfs_api: new(ipfs.Ipfs_api),
 		tables:   new(DBVisitTask),
@@ -44,10 +45,15 @@ func NewDataShell(mod ...ModDataApi) (api *Data_api, err error) {
 
 	err = api.InitData()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return api, nil
+	if api.role == "executer" {
+		task_id = api.task_id
+	} else {
+		task_id = api.v_task_id
+	}
+	return api, task_id, nil
 }
 
 func DataWithRole(role string) ModDataApi {
@@ -103,7 +109,7 @@ func (v *Data_api) InitData() (err error) {
 		}
 		v.task_id = uuid.New().String()
 	} else {
-		if len(v.task_id) != 16 {
+		if _, err := uuid.Parse(v.task_id); err != nil { // 无效的uuid.
 			return errors.New("must give a valid task id")
 		}
 		if v.role == "verifier" {
@@ -156,11 +162,16 @@ func (v *Data_api) InitData() (err error) {
 
 func (v *Data_api) CloseImage() (err error) {
 	// judge的逻辑还没加
-	var table_path string
+	var table_path, table_folder_path string
 	if v.role == "executer" {
 		table_path = filepath.Join(v.data_local_path, "executer", v.task_id)
 	} else {
+		table_folder_path = filepath.Join(v.data_local_path, "verifier", v.task_id)
 		table_path = filepath.Join(v.data_local_path, "verifier", v.task_id, v.v_task_id)
+		_, err := os.Stat(table_folder_path)
+		if os.IsNotExist(err) {
+			os.Mkdir(table_folder_path, os.ModePerm)
+		}
 	}
 	err = json_op.SaveTable(table_path, v.tables)
 	if err != nil {
