@@ -70,8 +70,8 @@ func TestIpfsPublish(t *testing.T) {
 
 func TestIpfsPublishFolder(t *testing.T) {
 	api, err := ipfs.NewShell(
-		ipfs.ShellWithHost("127.0.0.1"),
 		ipfs.ShellWithPort(5001),
+		ipfs.ShellWithHost("127.0.0.1"),
 	)
 	if err != nil {
 		t.Fatalf(err.Error())

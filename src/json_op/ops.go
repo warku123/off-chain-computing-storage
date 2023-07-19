@@ -28,6 +28,7 @@ func TableToJson(v any) ([]byte, error) {
 }
 
 func SaveJsonToFile(dir string, jsonBytes []byte) error {
+	// 这块应该要给文件加个锁，之后看咋实现
 	err := os.WriteFile(dir, jsonBytes, 0644)
 	if err != nil {
 		return err

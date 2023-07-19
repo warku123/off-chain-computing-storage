@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	shell "github.com/ipfs/go-ipfs-api"
 )
 
 // 添加字符串返回cid
@@ -76,4 +78,17 @@ func (v *Ipfs_api) PublishFile(cid, keyname string) (ipnsname string, err error)
 	}
 
 	return response.Name, nil
+}
+
+func (v *Ipfs_api) GetFileCid(path string) (cid string, err error) {
+	reader, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+
+	cid, err = v.Sh.Add(reader, shell.OnlyHash(true))
+	if err != nil {
+		return "", err
+	}
+	return cid, nil
 }

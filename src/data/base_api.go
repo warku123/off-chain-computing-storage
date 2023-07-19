@@ -111,9 +111,11 @@ func (v *Data_api) AddData(name string, value string) (err error) {
 
 	// Add data to write table
 	v.tables.AddWriteTuple(name, cid)
-	err = v.db.AddWriteNum(name)
-	if err != nil {
-		return err
+	if v.role == "executer" {
+		err = v.db.AddWriteNum(name)
+		if err != nil {
+			return err
+		}
 	}
 
 	// 不在此处sync，最后close session时候统一sync

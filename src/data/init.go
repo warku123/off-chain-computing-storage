@@ -115,6 +115,7 @@ func (v *Data_api) InitData() (err error) {
 		if v.role == "verifier" {
 			v.v_task_id = uuid.New().String()
 		}
+		// judge的v_task_id随意
 	}
 
 	// 初始化ipfs shell
@@ -132,7 +133,7 @@ func (v *Data_api) InitData() (err error) {
 	// 读取tables
 	table_dir := filepath.Join(v.data_local_path, "executer", v.task_id)
 	if v.role == "executer" {
-		err = json_op.GenEmptyTable(table_dir)
+		// err = json_op.GenEmptyTable(table_dir)
 		v.tables.Read_table = make(map[string]read_variable)
 		v.tables.Write_table = make(map[string]write_variable)
 		if err != nil {
@@ -160,25 +161,53 @@ func (v *Data_api) InitData() (err error) {
 	return nil
 }
 
-func (v *Data_api) CloseImage() (err error) {
+func (v *Data_api) CloseData() (err error) {
 	// judge的逻辑还没加
 	var table_path, table_folder_path string
 	if v.role == "executer" {
 		table_path = filepath.Join(v.data_local_path, "executer", v.task_id)
-	} else {
+	} else if v.role == "verifier" {
 		table_folder_path = filepath.Join(v.data_local_path, "verifier", v.task_id)
 		table_path = filepath.Join(v.data_local_path, "verifier", v.task_id, v.v_task_id)
 		_, err := os.Stat(table_folder_path)
 		if os.IsNotExist(err) {
 			os.Mkdir(table_folder_path, os.ModePerm)
 		}
+	} else {
+		return errors.New("judge not support")
 	}
+
 	err = json_op.SaveTable(table_path, v.tables)
 	if err != nil {
 		return err
 	}
 
+	db_path := filepath.Join(v.data_local_path, "db")
+	err = json_op.SaveTable(db_path, v.db)
+	if err != nil {
+		return err
+	}
+
 	// 上传table
+	_, err = v.SyncDataToIPFS()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (v *Data_api) CloseJudgeData() (err error) {
+	if v.role != "judge" {
+		return errors.New("only judge can close judge data")
+	}
+
+	db_path := filepath.Join(v.data_local_path, "db")
+	err = json_op.SaveTable(db_path, v.db)
+	if err != nil {
+		return err
+	}
+
 	_, err = v.SyncDataToIPFS()
 	if err != nil {
 		return err

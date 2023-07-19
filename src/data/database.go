@@ -24,18 +24,14 @@ func (v *Data_table) AddCid(name, hash string) (err error) {
 		if entry.Write_num == 0 {
 			// 因为修改写表时Writenum+1，所以不会出现0的情况
 			return errors.New("add cid: write num is 0")
-		} else if entry.Write_num == 1 {
-			// 说明写入时没有其他写入任务，但是是新建数据
-			if len(entry.Data_tuples) == 0 {
-				entry.Data_tuples = append(entry.Data_tuples, Data{
-					Value_hash: hash,
-					Read_num:   0,
-				})
-			}
-			// 说明写入时没有其他写入任务，直接修改最后一个版本数据
+		} else if entry.Write_num == 1 &&
+			entry.Data_tuples[len(entry.Data_tuples)-1].Read_num > 0 &&
+			len(entry.Data_tuples) != 0 {
+			// 只有一个写入任务，且最后一个数据没有读取任务，同时不是新建数据时
+			// 直接修改最后一个版本数据
 			entry.Data_tuples[len(entry.Data_tuples)-1].Value_hash = hash
 		} else {
-			// 说明写入时有其他写入任务，需要新建一个版本数据
+			// 其他情况需要新建一个版本数据
 			entry.Data_tuples = append(entry.Data_tuples, Data{
 				Value_hash: hash,
 				Read_num:   0,
@@ -64,6 +60,7 @@ func (v *Data_table) GetCid(name string, version int) string {
 func (v *Data_table) AddWriteNum(name string) error {
 	if entry, ok := (*v)[name]; ok {
 		entry.Write_num++
+		(*v)[name] = entry
 	} else {
 		(*v)[name] = Data_entry{
 			Data_tuples: []Data{},
@@ -76,7 +73,11 @@ func (v *Data_table) AddWriteNum(name string) error {
 
 func (v *Data_table) ReduceWriteNum(name string) error {
 	if entry, ok := (*v)[name]; ok {
+		if entry.Write_num <= 0 {
+			return errors.New("ReduceWriteNum: write num <= 0")
+		}
 		entry.Write_num--
+		(*v)[name] = entry
 	} else {
 		return errors.New("ReduceWriteNum: no such data entry")
 	}
