@@ -1,6 +1,7 @@
 package image
 
 import (
+	"bytes"
 	"path/filepath"
 )
 
@@ -68,4 +69,30 @@ func (v *Image_api) GetImageByCid(cid, outdir string) (err error) {
 		return err
 	}
 	return nil
+}
+
+func (v *Image_api) CatImageByCid(cid string) (image string, err error) {
+	content, err := v.ipfs_api.Sh.Cat(cid)
+	if err != nil {
+		return "", err
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(content)
+	finalStr := buf.String()
+
+	return finalStr, nil
+}
+
+func (v *Image_api) CatImageByIdx(idx int) (image string, timestamp string, err error) {
+	cid, timestamp, err := v.image_table.GetImageTuple(v.task_name, idx)
+	if err != nil {
+		return "", "", err
+	}
+
+	content, err := v.CatImageByCid(cid)
+	if err != nil {
+		return "", "", err
+	}
+	return content, timestamp, nil
 }

@@ -1,0 +1,5 @@
+FROM bitnami/etcd
+
+LABEL maintainer="Sipengxie"
+
+EXPOSE 2379

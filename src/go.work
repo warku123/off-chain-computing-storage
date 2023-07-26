@@ -6,4 +6,5 @@ use (
 	./ipfs
 	./json_op
 	./test
+	./service
 )

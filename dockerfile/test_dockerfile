@@ -1,6 +1,0 @@
-FROM ipfs/go-ipfs:latest
-
-ENV IPFS_PATH=/.ipfs
-
-RUN ipfs init
-RUN ipfs bootstrap rm all
