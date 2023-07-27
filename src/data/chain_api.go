@@ -27,6 +27,12 @@ func (v *Data_api) DeleteTables() (err error) {
 		}
 	}
 
+	// 删完立即同步IPFS
+	_, err = v.SyncDataToIPFS()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -66,12 +72,6 @@ func (v *Data_api) DataPersistance() (err error) {
 	if err != nil {
 		return err
 	}
-
-	// 上传table
-	// _, err = v.SyncDataToIPFS()
-	// if err != nil {
-	// 	return err
-	// }
 
 	return nil
 }

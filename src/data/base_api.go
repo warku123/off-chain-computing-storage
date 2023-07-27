@@ -127,3 +127,7 @@ func (v *Data_api) AddData(name string, value string) (err error) {
 
 	return nil
 }
+
+func (v *Data_api) GetRole() (role string) {
+	return v.role
+}

@@ -7,17 +7,13 @@ import (
 	"net/http"
 	"offstorage/image"
 	"os"
-	"sync"
 	"time"
 )
 
 // Custom data structure to represent the session
-type Session struct {
+type ImageSession struct {
 	Ish *image.Image_api // shell instance
 }
-
-// Concurrent session store using sync.Map
-var sessionStore sync.Map
 
 func CreateImage(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
@@ -40,6 +36,7 @@ func CreateImage(w http.ResponseWriter, r *http.Request) {
 		image.ImageWithPort(5001),
 		image.ImageWithKeyName(data["keyName"].(string)),
 		image.ImageWithIpnsName(data["ipnsName"].(string)),
+		image.ImageWithLocalPath("/image"),
 	)
 
 	if err != nil {
@@ -53,7 +50,7 @@ func CreateImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newSession := &Session{
+	newSession := &ImageSession{
 		Ish: ish,
 	}
 
@@ -80,7 +77,7 @@ func GetImageByCid(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Type assertion to convert the interface{} type to *Session
-	sessionData := sessionObj.(*Session)
+	sessionData := sessionObj.(*ImageSession)
 
 	// Parse incoming JSON data
 	var requestData map[string]interface{}
@@ -119,7 +116,7 @@ func GetImageByIdx(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Type assertion to convert the interface{} type to *Session
-	sessionData := sessionObj.(*Session)
+	sessionData := sessionObj.(*ImageSession)
 
 	// Parse incoming JSON data
 	var requestData map[string]interface{}
@@ -162,7 +159,7 @@ func AddImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Type assertion to retrieve the session object from sync.Map
-	session, ok := sessionObj.(*Session)
+	session, ok := sessionObj.(*ImageSession)
 	if !ok {
 		http.Error(w, "Invalid session object", http.StatusInternalServerError)
 		return
@@ -179,7 +176,7 @@ func AddImage(w http.ResponseWriter, r *http.Request) {
 	// Get the data from the request
 	data := requestData["data"]
 
-	tmp_path := "/tmp/image"
+	tmp_path := "/tmp_image.txt"
 	err = os.WriteFile(tmp_path, []byte(data), 0644)
 	if err != nil {
 		http.Error(w, "Failed to write data to IPFS", http.StatusInternalServerError)
@@ -206,7 +203,7 @@ func AddImage(w http.ResponseWriter, r *http.Request) {
 }
 
 // CloseSession closes a session and removes it from the sessionStore
-func CloseSession(w http.ResponseWriter, r *http.Request) {
+func CloseImageSession(w http.ResponseWriter, r *http.Request) {
 	sessionID := r.URL.Query().Get("session_id")
 
 	// Load the session from the sessionStore
@@ -217,7 +214,7 @@ func CloseSession(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Type assertion to retrieve the session object from sync.Map
-	session, ok := sessionObj.(*Session)
+	session, ok := sessionObj.(*ImageSession)
 	if !ok {
 		http.Error(w, "Invalid session object", http.StatusInternalServerError)
 		return
