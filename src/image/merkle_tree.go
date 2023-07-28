@@ -2,6 +2,7 @@ package image
 
 import (
 	"crypto/sha256"
+	"fmt"
 
 	"github.com/cbergoon/merkletree"
 )
@@ -21,6 +22,11 @@ func (v Image) Equals(other merkletree.Content) (bool, error) {
 
 func (v *Image_api) BuildTree() (err error) {
 	var content []merkletree.Content
+	if len((*v.image_table)[v.task_name]) == 0 {
+		fmt.Println("No image in this task")
+		return nil
+	}
+
 	for _, image := range (*v.image_table)[v.task_name] {
 		content = append(content, image)
 	}

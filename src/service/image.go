@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,7 +19,7 @@ type ImageSession struct {
 func CreateImage(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		http.Error(w, "Error reading request body", http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
@@ -31,16 +32,22 @@ func CreateImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	local_path, ok := data["localPath"].(string)
+	if !ok {
+		local_path = "/image"
+	}
+
 	ish, err := image.NewImageShell(
 		image.ImageWithHost("127.0.0.1"),
 		image.ImageWithPort(5001),
 		image.ImageWithKeyName(data["keyName"].(string)),
 		image.ImageWithIpnsName(data["ipnsName"].(string)),
-		image.ImageWithLocalPath("/image"),
+		image.ImageWithTaskName(data["taskName"].(string)),
+		image.ImageWithLocalPath(local_path),
 	)
 
 	if err != nil {
-		http.Error(w, "Error creating image shell", http.StatusInternalServerError)
+		http.Error(w, "Error creating image shell: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -148,6 +155,7 @@ func GetImageByIdx(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(responseData)
 }
 
+// AddData adds data to IPFS，data是base64编码后的字符串
 func AddImage(w http.ResponseWriter, r *http.Request) {
 	sessionID := r.URL.Query().Get("session_id")
 
@@ -174,12 +182,18 @@ func AddImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the data from the request
-	data := requestData["data"]
+	data_str := requestData["data"]
 
-	tmp_path := "/tmp_image.txt"
+	// Decode the base64 string
+	data, err := base64.StdEncoding.DecodeString(data_str)
+	if err != nil {
+		return
+	}
+
+	tmp_path := "/tmp_image"
 	err = os.WriteFile(tmp_path, []byte(data), 0644)
 	if err != nil {
-		http.Error(w, "Failed to write data to IPFS", http.StatusInternalServerError)
+		http.Error(w, "Failed to write file", http.StatusInternalServerError)
 		return
 	}
 

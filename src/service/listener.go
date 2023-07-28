@@ -1,8 +1,13 @@
 package service
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 func Listener() {
+	fmt.Println("Listener start")
+
 	// Create a new HTTP router
 	router := http.NewServeMux()
 

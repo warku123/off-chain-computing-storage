@@ -43,7 +43,9 @@ func TestIpfsPublish(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	cid, err := api.AddString("{}")
+	cid, err := api.AddFile(
+		"/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/k51qzi5uqu5dh3d6te4990h45jqr4mbh4e7om7ao88pvsfhi3qct15av2gwx5p",
+	)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

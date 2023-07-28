@@ -27,10 +27,14 @@ func CreateData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var task_id string
 	task_id, ok := requestData["taskID"].(string)
 	if !ok {
 		task_id = ""
+	}
+
+	local_path, ok := requestData["localPath"].(string)
+	if !ok {
+		local_path = "/data"
 	}
 
 	dsh, task_id, err := data.NewDataShell(
@@ -38,12 +42,12 @@ func CreateData(w http.ResponseWriter, r *http.Request) {
 		data.DataWithPort(5001),
 		data.DataWithKeyName(requestData["keyName"].(string)),
 		data.DataWithIpnsName(requestData["ipnsName"].(string)),
-		data.DataWithLocalPath("/data"),
+		data.DataWithLocalPath(local_path),
 		data.DataWithRole(requestData["role"].(string)),
 		data.DataWithTaskID(task_id),
 	)
 	if err != nil {
-		http.Error(w, "Error creating data shell", http.StatusInternalServerError)
+		http.Error(w, "Error creating data shell: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
