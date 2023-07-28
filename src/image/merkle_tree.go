@@ -39,7 +39,7 @@ func (v *Image_api) BuildTree() (err error) {
 }
 
 func (v *Image_api) GetRootHash() (hash string, err error) {
-	hash = string(v.merkle_tree.MerkleRoot())
+	hash = v.merkle_tree.Root.String()
 	return hash, nil
 }
 

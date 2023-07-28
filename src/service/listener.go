@@ -17,10 +17,14 @@ func Listener() {
 	router.HandleFunc("/data/close", CloseData)
 
 	router.HandleFunc("/image/create", CreateImage)
-	router.HandleFunc("/image/add", AddImage)
+	router.HandleFunc("/image/addstring", AddImageString)
+	router.HandleFunc("/image/addfile", AddImageFile)
+	router.HandleFunc("/image/catbyidx", CatImageByIdx)
+	router.HandleFunc("/image/cattbycid", CatImageByCid)
 	router.HandleFunc("/image/getbyidx", GetImageByIdx)
 	router.HandleFunc("/image/getbycid", GetImageByCid)
 	router.HandleFunc("/image/getroothash", GetMTreeRootHash)
+	router.HandleFunc("/image/gettimestamp", GetTimeStampByIdx)
 	router.HandleFunc("/image/close", CloseImage)
 
 	// Start the HTTP server on port 8080

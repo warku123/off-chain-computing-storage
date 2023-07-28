@@ -132,7 +132,7 @@ func AddData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add the data
-	err = sessionData.Dsh.AddData(
+	err = sessionData.Dsh.AddDataString(
 		requestData["key"].(string),
 		requestData["value"].(string),
 	)

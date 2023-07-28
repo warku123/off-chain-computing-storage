@@ -63,6 +63,14 @@ func (v *Image_api) GetImageByIdx(idx int, outdir string) (timestamp string, err
 	return timestamp, nil
 }
 
+func (v *Image_api) GetTimeStamp(idx int) (timestamp string, err error) {
+	_, timestamp, err = v.image_table.GetImageTuple(v.task_name, idx)
+	if err != nil {
+		return "", err
+	}
+	return timestamp, nil
+}
+
 func (v *Image_api) GetImageByCid(cid, outdir string) (err error) {
 	err = v.ipfs_api.GetFile(cid, outdir)
 	if err != nil {

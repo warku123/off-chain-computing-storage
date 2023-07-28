@@ -103,8 +103,33 @@ func (v *Data_api) GetData(name string) (value string, err error) {
 	return value, nil
 }
 
-func (v *Data_api) AddData(name string, value string) (err error) {
+func (v *Data_api) AddDataString(name string, value string) (err error) {
 	cid, err := v.ipfs_api.AddString(value)
+	if err != nil {
+		return err
+	}
+
+	// Add data to write table
+	v.tables.AddWriteTuple(name, cid)
+	if v.role == "executer" {
+		err = v.db.AddWriteNum(name)
+		if err != nil {
+			return err
+		}
+	}
+
+	// 不在此处sync，最后close session时候统一sync
+	// 可以并行，待优化
+	// _, err = v.SyncDataToIPFS()
+	// if err != nil {
+	// 	return err
+	// }
+
+	return nil
+}
+
+func (v *Data_api) AddDataFile(name string, file_path string) (err error) {
+	cid, err := v.ipfs_api.AddFile(file_path)
 	if err != nil {
 		return err
 	}

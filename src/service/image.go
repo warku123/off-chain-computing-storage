@@ -1,13 +1,13 @@
 package service
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"offstorage/image"
 	"os"
+	"path"
 	"time"
 )
 
@@ -16,7 +16,13 @@ type ImageSession struct {
 	Ish *image.Image_api // shell instance
 }
 
+var image_path string = "/Users/jojo/test/image"
+
 func CreateImage(w http.ResponseWriter, r *http.Request) {
+	if !pathExists(image_path) {
+		os.Mkdir(image_path, 0755)
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Error reading request body", http.StatusBadRequest)
@@ -72,7 +78,7 @@ func CreateImage(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(responseData)
 }
 
-func GetImageByCid(w http.ResponseWriter, r *http.Request) {
+func CatImageByCid(w http.ResponseWriter, r *http.Request) {
 	// Get the session ID from the request
 	sessionID := r.URL.Query().Get("session_id")
 
@@ -111,7 +117,7 @@ func GetImageByCid(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(imageData)
 }
 
-func GetImageByIdx(w http.ResponseWriter, r *http.Request) {
+func CatImageByIdx(w http.ResponseWriter, r *http.Request) {
 	// Get the session ID from the request
 	sessionID := r.URL.Query().Get("session_id")
 
@@ -133,14 +139,14 @@ func GetImageByIdx(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the IPFS hash from the request data
-	idx, ok := requestData["idx"].(int)
+	// 数字在interface里面必须先转为float64，再变为int
+	idx, ok := requestData["idx"].(float64)
 	if !ok {
 		http.Error(w, "Invalid index", http.StatusBadRequest)
 		return
 	}
 
-	imageData, timestamp, err := sessionData.Ish.CatImageByIdx(idx)
+	imageData, timestamp, err := sessionData.Ish.CatImageByIdx(int(idx))
 	if err != nil {
 		http.Error(w, "Error getting image", http.StatusInternalServerError)
 		return
@@ -155,8 +161,7 @@ func GetImageByIdx(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(responseData)
 }
 
-// AddData adds data to IPFS，data是base64编码后的字符串
-func AddImage(w http.ResponseWriter, r *http.Request) {
+func GetImageByCid(w http.ResponseWriter, r *http.Request) {
 	sessionID := r.URL.Query().Get("session_id")
 
 	// Load the session from the sessionStore
@@ -174,7 +179,7 @@ func AddImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse incoming JSON data
-	var requestData map[string]string
+	var requestData map[string]interface{}
 	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		http.Error(w, "Invalid JSON data", http.StatusBadRequest)
@@ -182,25 +187,230 @@ func AddImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the data from the request
-	data_str := requestData["data"]
-
-	// Decode the base64 string
-	data, err := base64.StdEncoding.DecodeString(data_str)
+	cid := requestData["cid"].(string)
+	destFilePath := path.Join(image_path, cid)
+	err = session.Ish.GetImageByCid(cid, destFilePath)
 	if err != nil {
+		http.Error(w, "Failed to get image:"+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer os.Remove(destFilePath)
+
+	// 设置Content-Disposition头，指示浏览器下载文件而不是直接在浏览器中打开
+	w.Header().Set("Content-Disposition", "attachment; filename="+cid)
+
+	// 使用http.ServeFile函数将文件内容作为响应发送给客户端
+	http.ServeFile(w, r, destFilePath)
+}
+
+func GetImageByIdx(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.URL.Query().Get("session_id")
+
+	// Load the session from the sessionStore
+	sessionObj, exists := sessionStore.Load(sessionID)
+	if !exists {
+		http.Error(w, "Session not found", http.StatusNotFound)
 		return
 	}
 
-	tmp_path := "/tmp_image"
+	// Type assertion to retrieve the session object from sync.Map
+	session, ok := sessionObj.(*ImageSession)
+	if !ok {
+		http.Error(w, "Invalid session object", http.StatusInternalServerError)
+		return
+	}
+
+	// Parse incoming JSON data
+	var requestData map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, "Invalid JSON data", http.StatusBadRequest)
+		return
+	}
+
+	// Get the data from the request
+	idx, ok := requestData["idx"].(float64)
+	if !ok {
+		http.Error(w, "Invalid index", http.StatusBadRequest)
+		return
+	}
+
+	destFilePath := path.Join(image_path, fmt.Sprint(int(idx)))
+	_, err = session.Ish.GetImageByIdx(int(idx), destFilePath)
+	if err != nil {
+		http.Error(w, "Failed to get image:"+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer os.Remove(destFilePath)
+
+	// 设置Content-Disposition头，指示浏览器下载文件而不是直接在浏览器中打开
+	w.Header().Set("Content-Disposition", "attachment; filename="+fmt.Sprint(int(idx)))
+
+	// 使用http.ServeFile函数将文件内容作为响应发送给客户端
+	http.ServeFile(w, r, destFilePath)
+}
+
+func GetTimeStampByIdx(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.URL.Query().Get("session_id")
+
+	// Load the session from the sessionStore
+	sessionObj, exists := sessionStore.Load(sessionID)
+	if !exists {
+		http.Error(w, "Session not found", http.StatusNotFound)
+		return
+	}
+
+	// Type assertion to retrieve the session object from sync.Map
+	session, ok := sessionObj.(*ImageSession)
+	if !ok {
+		http.Error(w, "Invalid session object", http.StatusInternalServerError)
+		return
+	}
+
+	// Parse incoming JSON data
+	var requestData map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, "Invalid JSON data", http.StatusBadRequest)
+		return
+	}
+
+	// Get the data from the request
+	idx, ok := requestData["idx"].(float64)
+	if !ok {
+		http.Error(w, "Invalid index", http.StatusBadRequest)
+		return
+	}
+
+	timestamp, err := session.Ish.GetTimeStamp(int(idx))
+	if err != nil {
+		http.Error(w, "Failed to get timestamp:"+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	responseData := map[string]interface{}{
+		"timestamp": timestamp,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(responseData)
+}
+
+// AddImageString adds image to IPFS，data是base64编码后的字符串
+func AddImageString(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.URL.Query().Get("session_id")
+
+	// Load the session from the sessionStore
+	sessionObj, exists := sessionStore.Load(sessionID)
+	if !exists {
+		http.Error(w, "Session not found", http.StatusNotFound)
+		return
+	}
+
+	// Type assertion to retrieve the session object from sync.Map
+	session, ok := sessionObj.(*ImageSession)
+	if !ok {
+		http.Error(w, "Invalid session object", http.StatusInternalServerError)
+		return
+	}
+
+	// Parse incoming JSON data
+	var requestData map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, "Invalid JSON data", http.StatusBadRequest)
+		return
+	}
+
+	// Get the data from the request
+	data := requestData["data"].(string)
+
+	tmp_path := path.Join(image_path, "tmp")
+	defer os.Remove(tmp_path)
+
 	err = os.WriteFile(tmp_path, []byte(data), 0644)
 	if err != nil {
 		http.Error(w, "Failed to write file", http.StatusInternalServerError)
 		return
 	}
 
-	timestamp := time.Now().Unix()
+	timestamp, ok := requestData["timestamp"].(string)
+	if !ok {
+		timestamp = fmt.Sprint(time.Now().Unix())
+	}
 
 	// Use IPFS Shell's Add method to write data to IPFS
-	cid, idx, err := session.Ish.AddImage(tmp_path, fmt.Sprint(timestamp))
+	cid, idx, err := session.Ish.AddImage(tmp_path, timestamp)
+	if err != nil {
+		http.Error(w, "Failed to write data to IPFS", http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with the IPFS hash
+	responseData := map[string]interface{}{
+		"cid": cid,
+		"idx": idx,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(responseData)
+}
+
+func AddImageFile(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.URL.Query().Get("session_id")
+
+	// Load the session from the sessionStore
+	sessionObj, exists := sessionStore.Load(sessionID)
+	if !exists {
+		http.Error(w, "Session not found", http.StatusNotFound)
+		return
+	}
+
+	// Type assertion to retrieve the session object from sync.Map
+	session, ok := sessionObj.(*ImageSession)
+	if !ok {
+		http.Error(w, "Invalid session object", http.StatusInternalServerError)
+		return
+	}
+
+	// 解析文件上传
+	err := r.ParseMultipartForm(10 << 20) // 最大支持10MB的文件上传
+	if err != nil {
+		http.Error(w, "Failed to parse multipart form data", http.StatusInternalServerError)
+		return
+	}
+
+	file, fileHeader, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "Failed to get file from request", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// 保存文件到本地
+	destFilePath := path.Join(image_path, fileHeader.Filename)
+	destFile, err := os.Create(destFilePath)
+	if err != nil {
+		http.Error(w, "Failed to create destination file", http.StatusInternalServerError)
+		return
+	}
+	defer os.Remove(destFilePath)
+	defer destFile.Close()
+
+	// 将文件内容拷贝到目标文件
+	_, err = io.Copy(destFile, file)
+	if err != nil {
+		http.Error(w, "Failed to copy file content", http.StatusInternalServerError)
+		return
+	}
+
+	timestamp := r.FormValue("timestamp")
+	if timestamp == "" {
+		timestamp = fmt.Sprint(time.Now().Unix())
+	}
+
+	// Use IPFS Shell's Add method to write data to IPFS
+	cid, idx, err := session.Ish.AddImage(destFilePath, timestamp)
 	if err != nil {
 		http.Error(w, "Failed to write data to IPFS", http.StatusInternalServerError)
 		return
