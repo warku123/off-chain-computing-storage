@@ -202,8 +202,39 @@ func AddImage(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(responseData)
 }
 
+func GetMTreeRootHash(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.URL.Query().Get("session_id")
+
+	// Load the session from the sessionStore
+	sessionObj, exists := sessionStore.Load(sessionID)
+	if !exists {
+		http.Error(w, "Session not found", http.StatusNotFound)
+		return
+	}
+
+	// Type assertion to retrieve the session object from sync.Map
+	session, ok := sessionObj.(*ImageSession)
+	if !ok {
+		http.Error(w, "Invalid session object", http.StatusInternalServerError)
+		return
+	}
+
+	hash, err := session.Ish.GetRootHash()
+	if err != nil {
+		http.Error(w, "Error getting root hash", http.StatusInternalServerError)
+		return
+	}
+
+	responseData := map[string]interface{}{
+		"hash": hash,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(responseData)
+}
+
 // CloseSession closes a session and removes it from the sessionStore
-func CloseImageSession(w http.ResponseWriter, r *http.Request) {
+func CloseImage(w http.ResponseWriter, r *http.Request) {
 	sessionID := r.URL.Query().Get("session_id")
 
 	// Load the session from the sessionStore
