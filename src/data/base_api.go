@@ -90,7 +90,7 @@ func (v *Data_api) GetDataCid(name string) (cid string, err error) {
 	return cid, nil
 }
 
-func (v *Data_api) GetData(name string) (value string, err error) {
+func (v *Data_api) CatData(name string) (value string, err error) {
 	cid, err := v.GetDataCid(name)
 	if err != nil {
 		return "", err
@@ -101,6 +101,19 @@ func (v *Data_api) GetData(name string) (value string, err error) {
 	}
 
 	return value, nil
+}
+
+func (v *Data_api) GetData(name, path string) (err error) {
+	cid, err := v.GetDataCid(name)
+	if err != nil {
+		return err
+	}
+
+	err = v.ipfs_api.GetFile(cid, path)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (v *Data_api) AddDataString(name string, value string) (cid string, err error) {

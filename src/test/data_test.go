@@ -26,7 +26,7 @@ func TestDataAddGet(t *testing.T) {
 	// 	t.Error(err)
 	// }
 
-	data, err := dsh.GetData("test")
+	data, err := dsh.CatData("test")
 	if err != nil {
 		t.Error(err)
 	}
@@ -60,7 +60,7 @@ func TestVDataAddGet(t *testing.T) {
 	// 	t.Error(err)
 	// }
 
-	data, err := dsh.GetData("test")
+	data, err := dsh.CatData("test")
 	if err != nil {
 		t.Error(err)
 	}

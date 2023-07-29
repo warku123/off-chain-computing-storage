@@ -59,6 +59,7 @@ func (v *Ipfs_api) ReadFile(cid string) (string, error) {
 	return finalStr, nil
 }
 
+// 以cid寻址文件，下载到outdir
 func (v *Ipfs_api) GetFile(cid string, outdir string) (err error) {
 	err = v.Sh.Get(cid, outdir)
 	return err

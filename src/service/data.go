@@ -17,7 +17,7 @@ var data_path string = "/Users/jojo/test/data"
 
 func CreateData(w http.ResponseWriter, r *http.Request) {
 	if !pathExists(data_path) {
-		os.MkdirAll(image_path, 0755)
+		os.MkdirAll(data_path, 0755)
 	}
 
 	body, err := io.ReadAll(r.Body)
@@ -80,7 +80,7 @@ func CreateData(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(responseData)
 }
 
-func GetData(w http.ResponseWriter, r *http.Request) {
+func CatData(w http.ResponseWriter, r *http.Request) {
 	// Get the session ID from the request
 	sessionID := r.URL.Query().Get("session_id")
 
@@ -103,7 +103,7 @@ func GetData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the data
-	data, err := sessionData.Dsh.GetData(requestData["key"].(string))
+	data, err := sessionData.Dsh.CatData(requestData["key"].(string))
 	if err != nil {
 		http.Error(w, "Error getting data", http.StatusInternalServerError)
 		return
@@ -115,6 +115,48 @@ func GetData(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(responseData)
+}
+
+func GetData(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.URL.Query().Get("session_id")
+
+	// Load the session from the sessionStore
+	sessionObj, exists := sessionStore.Load(sessionID)
+	if !exists {
+		http.Error(w, "Session not found", http.StatusNotFound)
+		return
+	}
+
+	// Type assertion to retrieve the session object from sync.Map
+	session, ok := sessionObj.(*DataSession)
+	if !ok {
+		http.Error(w, "Invalid session object", http.StatusInternalServerError)
+		return
+	}
+
+	// Parse incoming JSON data
+	var requestData map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, "Invalid JSON data", http.StatusBadRequest)
+		return
+	}
+
+	// Get the data from the request
+	name := requestData["name"].(string)
+	destFilePath := path.Join(data_path, name)
+	err = session.Dsh.GetData(name, destFilePath)
+	if err != nil {
+		http.Error(w, "Failed to get data:"+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer os.Remove(destFilePath)
+
+	// 设置Content-Disposition头，指示浏览器下载文件而不是直接在浏览器中打开
+	w.Header().Set("Content-Disposition", "attachment; filename="+name)
+
+	// 使用http.ServeFile函数将文件内容作为响应发送给客户端
+	http.ServeFile(w, r, destFilePath)
 }
 
 func AddDataString(w http.ResponseWriter, r *http.Request) {
