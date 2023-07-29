@@ -12,8 +12,10 @@ func Listener() {
 	router := http.NewServeMux()
 
 	router.HandleFunc("/data/create", CreateData)
-	router.HandleFunc("/data/add", AddData)
+	router.HandleFunc("/data/addstring", AddDataString)
+	router.HandleFunc("/data/addfile", AddDataFile)
 	router.HandleFunc("/data/get", GetData)
+	router.HandleFunc("/data/persistant", DataPersistant)
 	router.HandleFunc("/data/close", CloseData)
 
 	router.HandleFunc("/image/create", CreateImage)

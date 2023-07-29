@@ -5,13 +5,21 @@ import (
 	"io"
 	"net/http"
 	"offstorage/data"
+	"os"
+	"path"
 )
 
 type DataSession struct {
 	Dsh *data.Data_api // shell instance
 }
 
+var data_path string = "/Users/jojo/test/data"
+
 func CreateData(w http.ResponseWriter, r *http.Request) {
+	if !pathExists(data_path) {
+		os.MkdirAll(image_path, 0755)
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Error reading request body", http.StatusInternalServerError)
@@ -109,7 +117,7 @@ func GetData(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(responseData)
 }
 
-func AddData(w http.ResponseWriter, r *http.Request) {
+func AddDataString(w http.ResponseWriter, r *http.Request) {
 	// Get the session ID from the request
 	sessionID := r.URL.Query().Get("session_id")
 
@@ -132,7 +140,7 @@ func AddData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add the data
-	err = sessionData.Dsh.AddDataString(
+	cid, err := sessionData.Dsh.AddDataString(
 		requestData["key"].(string),
 		requestData["value"].(string),
 	)
@@ -143,7 +151,76 @@ func AddData(w http.ResponseWriter, r *http.Request) {
 
 	// Respond with a success message
 	responseData := map[string]string{
-		"message": "Data added successfully",
+		"cid": cid,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(responseData)
+}
+
+func AddDataFile(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.URL.Query().Get("session_id")
+
+	// Load the session from the sessionStore
+	sessionObj, exists := sessionStore.Load(sessionID)
+	if !exists {
+		http.Error(w, "Session not found", http.StatusNotFound)
+		return
+	}
+
+	// Type assertion to retrieve the session object from sync.Map
+	session, ok := sessionObj.(*DataSession)
+	if !ok {
+		http.Error(w, "Invalid session object", http.StatusInternalServerError)
+		return
+	}
+
+	// 解析文件上传
+	err := r.ParseMultipartForm(10 << 20) // 最大支持10MB的文件上传
+	if err != nil {
+		http.Error(w, "Failed to parse multipart form data", http.StatusInternalServerError)
+		return
+	}
+
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "Failed to get file from request", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	key := r.FormValue("key")
+	if key == "" {
+		http.Error(w, "Key need to be provided in form value", http.StatusBadRequest)
+		return
+	}
+
+	// 保存文件到本地
+	destFilePath := path.Join(data_path, key)
+	destFile, err := os.Create(destFilePath)
+	if err != nil {
+		http.Error(w, "Failed to create destination file", http.StatusInternalServerError)
+		return
+	}
+	defer os.Remove(destFilePath)
+	defer destFile.Close()
+
+	// 将文件内容拷贝到目标文件
+	_, err = io.Copy(destFile, file)
+	if err != nil {
+		http.Error(w, "Failed to copy file content", http.StatusInternalServerError)
+		return
+	}
+
+	cid, err := session.Dsh.AddDataFile(key, destFilePath)
+	if err != nil {
+		http.Error(w, "Error adding data", http.StatusInternalServerError)
+		return
+	}
+
+	// Respond
+	responseData := map[string]string{
+		"cid": cid,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

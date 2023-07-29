@@ -20,7 +20,7 @@ var image_path string = "/Users/jojo/test/image"
 
 func CreateImage(w http.ResponseWriter, r *http.Request) {
 	if !pathExists(image_path) {
-		os.Mkdir(image_path, 0755)
+		os.MkdirAll(image_path, 0755)
 	}
 
 	body, err := io.ReadAll(r.Body)

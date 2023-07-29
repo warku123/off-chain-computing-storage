@@ -103,10 +103,10 @@ func (v *Data_api) GetData(name string) (value string, err error) {
 	return value, nil
 }
 
-func (v *Data_api) AddDataString(name string, value string) (err error) {
-	cid, err := v.ipfs_api.AddString(value)
+func (v *Data_api) AddDataString(name string, value string) (cid string, err error) {
+	cid, err = v.ipfs_api.AddString(value)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// Add data to write table
@@ -114,7 +114,7 @@ func (v *Data_api) AddDataString(name string, value string) (err error) {
 	if v.role == "executer" {
 		err = v.db.AddWriteNum(name)
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
@@ -125,13 +125,13 @@ func (v *Data_api) AddDataString(name string, value string) (err error) {
 	// 	return err
 	// }
 
-	return nil
+	return cid, nil
 }
 
-func (v *Data_api) AddDataFile(name string, file_path string) (err error) {
-	cid, err := v.ipfs_api.AddFile(file_path)
+func (v *Data_api) AddDataFile(name string, file_path string) (cid string, err error) {
+	cid, err = v.ipfs_api.AddFile(file_path)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// Add data to write table
@@ -139,7 +139,7 @@ func (v *Data_api) AddDataFile(name string, file_path string) (err error) {
 	if v.role == "executer" {
 		err = v.db.AddWriteNum(name)
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
@@ -150,7 +150,7 @@ func (v *Data_api) AddDataFile(name string, file_path string) (err error) {
 	// 	return err
 	// }
 
-	return nil
+	return cid, nil
 }
 
 func (v *Data_api) GetRole() (role string) {
