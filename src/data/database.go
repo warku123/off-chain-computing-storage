@@ -25,8 +25,8 @@ func (v *Data_table) AddCid(name, hash string) (err error) {
 			// 因为修改写表时Writenum+1，所以不会出现0的情况
 			return errors.New("add cid: write num is 0")
 		} else if entry.Write_num == 1 &&
-			entry.Data_tuples[len(entry.Data_tuples)-1].Read_num > 0 &&
-			len(entry.Data_tuples) != 0 {
+			len(entry.Data_tuples) != 0 &&
+			entry.Data_tuples[len(entry.Data_tuples)-1].Read_num > 0 {
 			// 只有一个写入任务，且最后一个数据没有读取任务，同时不是新建数据时
 			// 直接修改最后一个版本数据
 			entry.Data_tuples[len(entry.Data_tuples)-1].Value_hash = hash

@@ -162,7 +162,6 @@ func (v *Data_api) InitData() (err error) {
 }
 
 func (v *Data_api) CloseData() (err error) {
-	// judge的逻辑还没加
 	var table_path, table_folder_path string
 	if v.role == "executer" {
 		table_path = filepath.Join(v.data_local_path, "executer", v.task_id)

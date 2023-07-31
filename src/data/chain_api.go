@@ -2,6 +2,7 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"offstorage/json_op"
 	"os"
 	"path/filepath"
@@ -44,6 +45,7 @@ func (v *Data_api) DataPersistance() (err error) {
 
 	for key, entry := range v.tables.Write_table {
 		cid := entry[len(entry)-1]
+		fmt.Println(1111)
 		err = v.db.AddCid(key, cid)
 		if err != nil {
 			return err

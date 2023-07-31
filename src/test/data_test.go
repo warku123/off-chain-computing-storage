@@ -81,7 +81,7 @@ func TestDBPersistant(t *testing.T) {
 		data.DataWithIpnsName("k51qzi5uqu5dki16z7czuv0wjv47dpl112v5pqhiifqzkcje9dt42lvdk9paif"),
 		data.DataWithLocalPath("/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/test_data"),
 		data.DataWithRole("judge"),
-		data.DataWithTaskID("b5427047-d2c2-499f-ad64-f92425057a53"),
+		data.DataWithTaskID("e98979b2-e237-4845-abaa-fb83109adb26"),
 	)
 	if err != nil {
 		t.Error(err)

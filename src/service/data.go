@@ -105,7 +105,7 @@ func CatData(w http.ResponseWriter, r *http.Request) {
 	// Get the data
 	data, err := sessionData.Dsh.CatData(requestData["key"].(string))
 	if err != nil {
-		http.Error(w, "Error getting data", http.StatusInternalServerError)
+		http.Error(w, "Error getting data: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -143,9 +143,13 @@ func GetData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the data from the request
-	name := requestData["name"].(string)
-	destFilePath := path.Join(data_path, name)
-	err = session.Dsh.GetData(name, destFilePath)
+	key := requestData["key"].(string)
+	if key == "" {
+		http.Error(w, "Invalid data key", http.StatusBadRequest)
+		return
+	}
+	destFilePath := path.Join(data_path, key)
+	err = session.Dsh.GetData(key, destFilePath)
 	if err != nil {
 		http.Error(w, "Failed to get data:"+err.Error(), http.StatusInternalServerError)
 		return
@@ -153,7 +157,7 @@ func GetData(w http.ResponseWriter, r *http.Request) {
 	defer os.Remove(destFilePath)
 
 	// 设置Content-Disposition头，指示浏览器下载文件而不是直接在浏览器中打开
-	w.Header().Set("Content-Disposition", "attachment; filename="+name)
+	w.Header().Set("Content-Disposition", "attachment; filename="+key)
 
 	// 使用http.ServeFile函数将文件内容作为响应发送给客户端
 	http.ServeFile(w, r, destFilePath)

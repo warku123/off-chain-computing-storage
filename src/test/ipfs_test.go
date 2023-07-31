@@ -79,7 +79,7 @@ func TestIpfsPublishFolder(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	cid, err := api.AddFolder("/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/empty_data")
+	cid, err := api.AddFolder("/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/test_data")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
