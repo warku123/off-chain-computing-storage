@@ -17,6 +17,7 @@ func Listener() {
 	router.HandleFunc("/data/cat", CatData)
 	router.HandleFunc("/data/get", GetData)
 	router.HandleFunc("/data/persistant", DataPersistant)
+	router.HandleFunc("/data/traverse", TraverseTable)
 	router.HandleFunc("/data/close", CloseData)
 
 	router.HandleFunc("/image/create", CreateImage)

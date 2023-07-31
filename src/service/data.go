@@ -302,6 +302,45 @@ func DataPersistant(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(responseData)
 }
 
+func TraverseTable(w http.ResponseWriter, r *http.Request) {
+	// Get the session ID from the request
+	sessionID := r.URL.Query().Get("session_id")
+
+	// Get the session from the session store using sync.Map's Load method (thread-safe)
+	sessionObj, ok := sessionStore.Load(sessionID)
+	if !ok {
+		http.Error(w, "Error getting session", http.StatusBadRequest)
+		return
+	}
+
+	// Type assertion to convert the interface{} type to *Session
+	session := sessionObj.(*DataSession)
+
+	// Parse incoming JSON data
+	var requestData map[string]string
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, "Invalid JSON data", http.StatusBadRequest)
+		return
+	}
+
+	// Traverse the table
+	table, err := session.Dsh.TraverseTable(
+		session.Dsh.GetTaskID(),
+		requestData["vtaskID"],
+	)
+	if err != nil {
+		http.Error(w, "Error traversing table: "+err.Error(), http.StatusInternalServerError)
+	}
+
+	responseData := map[string]string{
+		"table": table,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(responseData)
+}
+
 func CloseData(w http.ResponseWriter, r *http.Request) {
 	// Get the session ID from the request
 	sessionID := r.URL.Query().Get("session_id")

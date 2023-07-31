@@ -169,3 +169,7 @@ func (v *Data_api) AddDataFile(name string, file_path string) (cid string, err e
 func (v *Data_api) GetRole() (role string) {
 	return v.role
 }
+
+func (v *Data_api) GetTaskID() (task_id string) {
+	return v.task_id
+}
