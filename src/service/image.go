@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"offstorage/image"
+	"offstorage/utils"
 	"os"
 	"path"
 	"time"
@@ -19,7 +20,7 @@ type ImageSession struct {
 var image_path string = "/Users/jojo/test/image"
 
 func CreateImage(w http.ResponseWriter, r *http.Request) {
-	if !pathExists(image_path) {
+	if !utils.PathExists(image_path) {
 		os.MkdirAll(image_path, 0755)
 	}
 
@@ -57,7 +58,7 @@ func CreateImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionID, err := GenerateRandomID(16)
+	sessionID, err := utils.GenerateRandomID(16)
 	if err != nil {
 		http.Error(w, "Error generating session ID", http.StatusInternalServerError)
 		return

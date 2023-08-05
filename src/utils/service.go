@@ -1,4 +1,4 @@
-package service
+package utils
 
 import (
 	"crypto/rand"
@@ -16,7 +16,7 @@ func GenerateRandomID(length int) (string, error) {
 	return base64.URLEncoding.EncodeToString(randomBytes)[:length], nil
 }
 
-func pathExists(path string) bool {
+func PathExists(path string) bool {
 	_, err := os.Stat(path)
 	return !os.IsNotExist(err)
 }

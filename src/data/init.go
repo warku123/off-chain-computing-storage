@@ -3,7 +3,7 @@ package data
 import (
 	"errors"
 	"offstorage/ipfs"
-	"offstorage/json_op"
+	"offstorage/utils"
 	"os"
 	"path/filepath"
 
@@ -133,7 +133,7 @@ func (v *Data_api) InitData() (err error) {
 	// 读取tables
 	table_dir := filepath.Join(v.data_local_path, "executer", v.task_id)
 	if v.role == "executer" {
-		// err = json_op.GenEmptyTable(table_dir)
+		// err = utils.GenEmptyTable(table_dir)
 		v.tables.Read_table = make(map[string]read_variable)
 		v.tables.Write_table = make(map[string]write_variable)
 		if err != nil {
@@ -141,7 +141,7 @@ func (v *Data_api) InitData() (err error) {
 		}
 	} else {
 		// 读读写表
-		err = json_op.JsonToTable(table_dir, v.tables)
+		err = utils.JsonToTable(table_dir, v.tables)
 		if err != nil {
 			return err
 		}
@@ -153,7 +153,7 @@ func (v *Data_api) InitData() (err error) {
 
 	// 读取db
 	db_dir := filepath.Join(v.data_local_path, "db")
-	err = json_op.JsonToTable(db_dir, v.db)
+	err = utils.JsonToTable(db_dir, v.db)
 	if err != nil {
 		return err
 	}
@@ -176,13 +176,13 @@ func (v *Data_api) CloseData() (err error) {
 		return errors.New("judge not support")
 	}
 
-	err = json_op.SaveTable(table_path, v.tables)
+	err = utils.SaveTable(table_path, v.tables)
 	if err != nil {
 		return err
 	}
 
 	db_path := filepath.Join(v.data_local_path, "db")
-	err = json_op.SaveTable(db_path, v.db)
+	err = utils.SaveTable(db_path, v.db)
 	if err != nil {
 		return err
 	}
@@ -202,7 +202,7 @@ func (v *Data_api) CloseJudgeData() (err error) {
 	}
 
 	db_path := filepath.Join(v.data_local_path, "db")
-	err = json_op.SaveTable(db_path, v.db)
+	err = utils.SaveTable(db_path, v.db)
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,7 @@ package image
 import (
 	"fmt"
 	"offstorage/ipfs"
-	"offstorage/json_op"
+	"offstorage/utils"
 	"path/filepath"
 
 	"github.com/cbergoon/merkletree"
@@ -100,7 +100,7 @@ func (v *Image_api) InitImage() error {
 	}
 
 	local_imagetable_path := filepath.Join(dest_dir, v.image_ipns_name)
-	err = json_op.JsonToTable(local_imagetable_path, v.image_table)
+	err = utils.JsonToTable(local_imagetable_path, v.image_table)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,7 @@
 package image
 
 import (
-	"offstorage/json_op"
+	"offstorage/utils"
 )
 
 type Image struct {
@@ -13,12 +13,12 @@ type ImageTable map[string][]Image
 
 func (v *ImageTable) GenEmptyImageTable(image_dir string) error {
 	v = new(ImageTable)
-	jsonBytes, err := json_op.TableToJson(v)
+	jsonBytes, err := utils.TableToJson(v)
 	if err != nil {
 		return err
 	}
 
-	err = json_op.SaveJsonToFile(image_dir, jsonBytes)
+	err = utils.SaveJsonToFile(image_dir, jsonBytes)
 	if err != nil {
 		return err
 	}
@@ -44,11 +44,11 @@ func (v *ImageTable) GetImageTuple(task_name string, idx int) (hash, timestamp s
 }
 
 func (v *ImageTable) SaveImageTable(image_dir string) error {
-	jsonBytes, err := json_op.TableToJson(v)
+	jsonBytes, err := utils.TableToJson(v)
 	if err != nil {
 		return err
 	}
-	err = json_op.SaveJsonToFile(image_dir, jsonBytes)
+	err = utils.SaveJsonToFile(image_dir, jsonBytes)
 	if err != nil {
 		return err
 	}

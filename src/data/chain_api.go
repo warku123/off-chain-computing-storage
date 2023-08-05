@@ -3,7 +3,7 @@ package data
 import (
 	"errors"
 	"fmt"
-	"offstorage/json_op"
+	"offstorage/utils"
 	"os"
 	"path/filepath"
 )
@@ -121,7 +121,7 @@ func (v *Data_api) InitDB() (err error) {
 	}
 
 	// v.db = new(Data_table)
-	err = json_op.GenEmptyTable(
+	err = utils.GenEmptyTable(
 		filepath.Join(v.data_local_path, v.data_ipns_name, "db"),
 	)
 	if err != nil {
@@ -150,12 +150,12 @@ func (v *Data_api) TraverseTable(task_id, v_task_id string) (table string, err e
 
 	// 查看是否符合表结构
 	tables := new(DBVisitTask)
-	err = json_op.JsonToTable(table_dir, tables)
+	err = utils.JsonToTable(table_dir, tables)
 	if err != nil {
 		return "", err
 	}
 
-	bytes, err := json_op.TableToJson(tables)
+	bytes, err := utils.TableToJson(tables)
 	if err != nil {
 		return "", err
 	}

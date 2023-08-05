@@ -3,7 +3,7 @@ package data
 import (
 	"errors"
 	"fmt"
-	"offstorage/json_op"
+	"offstorage/utils"
 	"path/filepath"
 )
 
@@ -64,7 +64,7 @@ func (v *Data_api) GetDataCid(name string) (cid string, err error) {
 	}
 
 	db_dir := filepath.Join(v.data_local_path, "db")
-	err = json_op.JsonToTable(db_dir, v.db)
+	err = utils.JsonToTable(db_dir, v.db)
 	if err != nil {
 		return "", err
 	}

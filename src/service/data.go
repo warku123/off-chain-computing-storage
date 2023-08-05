@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"offstorage/data"
+	"offstorage/utils"
 	"os"
 	"path"
 )
@@ -16,7 +17,7 @@ type DataSession struct {
 var data_path string = "/Users/jojo/test/data"
 
 func CreateData(w http.ResponseWriter, r *http.Request) {
-	if !pathExists(data_path) {
+	if !utils.PathExists(data_path) {
 		os.MkdirAll(data_path, 0755)
 	}
 
@@ -59,7 +60,7 @@ func CreateData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionID, err := GenerateRandomID(16)
+	sessionID, err := utils.GenerateRandomID(16)
 	if err != nil {
 		http.Error(w, "Error generating session ID", http.StatusInternalServerError)
 		return
