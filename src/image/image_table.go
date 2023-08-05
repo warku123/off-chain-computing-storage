@@ -44,11 +44,7 @@ func (v *ImageTable) GetImageTuple(task_name string, idx int) (hash, timestamp s
 }
 
 func (v *ImageTable) SaveImageTable(image_dir string) error {
-	jsonBytes, err := utils.TableToJson(v)
-	if err != nil {
-		return err
-	}
-	err = utils.SaveJsonToFile(image_dir, jsonBytes)
+	err := utils.SaveTable(image_dir, v)
 	if err != nil {
 		return err
 	}

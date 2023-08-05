@@ -21,7 +21,7 @@ func (v *Data_api) DeleteTables() (err error) {
 	}
 
 	ver_table_dir := filepath.Join(v.data_local_path, "verifier", v.task_id)
-	if Exists(ver_table_dir) {
+	if utils.PathExists(ver_table_dir) {
 		err = os.RemoveAll(ver_table_dir)
 		if err != nil {
 			return err
@@ -181,13 +181,4 @@ func (v *Data_api) GetTableCid(task_id, v_task_id string) (table string, err err
 		return "", err
 	}
 	return cid, nil
-}
-
-// 查看某文件夹是否存在
-func Exists(path string) bool {
-	_, err := os.Stat(path) //os.Stat获取文件信息
-	if err != nil {
-		return os.IsExist(err)
-	}
-	return true
 }
