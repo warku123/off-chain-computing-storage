@@ -6,13 +6,28 @@ import (
 )
 
 // LockFile 锁定文件，返回文件锁对象和错误信息。
-func LockFile(filePath string) (*os.File, error) {
+func LockFileWithExclusive(filePath string) (*os.File, error) {
 	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, err
 	}
 
 	err = syscall.Flock(int(file.Fd()), syscall.LOCK_EX)
+	if err != nil {
+		file.Close()
+		return nil, err
+	}
+
+	return file, nil
+}
+
+func LockFileWithShared(filePath string) (*os.File, error) {
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return nil, err
+	}
+
+	err = syscall.Flock(int(file.Fd()), syscall.LOCK_SH)
 	if err != nil {
 		file.Close()
 		return nil, err

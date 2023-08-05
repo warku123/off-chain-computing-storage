@@ -6,11 +6,19 @@ import (
 )
 
 func JsonToTable(image_dir string, v any) error {
+	file, err := LockFileWithShared(image_dir)
+	if err != nil {
+		return err
+	}
 	content, err := os.ReadFile(image_dir)
 	if err != nil {
 		return err
 	}
-	// fmt.Println("content" + string(content))
+	err = UnlockFile(file)
+	if err != nil {
+		return err
+	}
+
 	err = json.Unmarshal(content, v)
 	if err != nil {
 		return err
@@ -29,7 +37,7 @@ func TableToJson(v any) ([]byte, error) {
 
 func SaveJsonToFile(dir string, jsonBytes []byte) error {
 	// 给文件加个锁
-	file, err := LockFile(dir)
+	file, err := LockFileWithExclusive(dir)
 	if err != nil {
 		return err
 	}
