@@ -5,8 +5,8 @@ import (
 )
 
 type Image struct {
-	Hash      string `json:"hash"`
-	Timestamp string `json:"timestamp"`
+	Hash   string `json:"hash"`
+	Height uint64 `json:"height"`
 }
 
 type ImageTable map[string][]Image
@@ -25,10 +25,10 @@ func (v *ImageTable) GenEmptyImageTable(image_dir string) error {
 	return nil
 }
 
-func (v *ImageTable) AddImageTuple(hash, timestamp, task_name string) (idx int, err error) {
+func (v *ImageTable) AddImageTuple(hash string, height uint64, task_name string) (idx int, err error) {
 	image := Image{
-		Hash:      hash,
-		Timestamp: timestamp,
+		Hash:   hash,
+		Height: height,
 	}
 
 	idx = len((*v)[task_name])
@@ -37,10 +37,10 @@ func (v *ImageTable) AddImageTuple(hash, timestamp, task_name string) (idx int, 
 	return idx, nil
 }
 
-func (v *ImageTable) GetImageTuple(task_name string, idx int) (hash, timestamp string, err error) {
+func (v *ImageTable) GetImageTuple(task_name string, idx int) (hash string, height uint64, err error) {
 	image_tuple := (*v)[task_name][idx]
 
-	return image_tuple.Hash, image_tuple.Timestamp, nil
+	return image_tuple.Hash, image_tuple.Height, nil
 }
 
 func (v *ImageTable) SaveImageTable(image_dir string) error {

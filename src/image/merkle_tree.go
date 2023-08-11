@@ -3,6 +3,7 @@ package image
 import (
 	"crypto/sha256"
 	"fmt"
+	"strconv"
 
 	"github.com/cbergoon/merkletree"
 )
@@ -10,14 +11,14 @@ import (
 // 实现Interface的两个函数
 func (v Image) CalculateHash() ([]byte, error) {
 	h := sha256.New()
-	if _, err := h.Write([]byte(v.Hash + v.Timestamp)); err != nil {
+	if _, err := h.Write([]byte(v.Hash + strconv.FormatUint(v.Height, 10))); err != nil {
 		return nil, err
 	}
 	return h.Sum(nil), nil
 }
 
 func (v Image) Equals(other merkletree.Content) (bool, error) {
-	return v.Hash == other.(Image).Hash && v.Timestamp == other.(Image).Timestamp, nil
+	return v.Hash == other.(Image).Hash && v.Height == other.(Image).Height, nil
 }
 
 func (v *Image_api) BuildTree() (err error) {

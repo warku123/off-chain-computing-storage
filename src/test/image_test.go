@@ -1,10 +1,8 @@
 package test
 
 import (
-	"fmt"
 	"offstorage/image"
 	"testing"
-	"time"
 )
 
 func TestImageInit(t *testing.T) {
@@ -47,10 +45,10 @@ func TestAddImage(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	timestamp := time.Now().Unix()
+	test_height := 10001
 	cid, idx, err := image_api.AddImage(
 		"/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/test.txt",
-		fmt.Sprint(timestamp),
+		uint64(test_height),
 	)
 	if err != nil {
 		t.Fatalf(err.Error())
@@ -59,12 +57,12 @@ func TestAddImage(t *testing.T) {
 	t.Log("cid:" + cid)
 	t.Logf("idx:%d", idx)
 
-	time, err := image_api.GetImageByIdx(idx, "/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/download.txt")
+	height, err := image_api.GetImageByIdx(idx, "/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/download.txt")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
 
-	t.Log(timestamp, time)
+	t.Log(height, test_height)
 
 	err = image_api.GetImageByCid(cid, "/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/download2.txt")
 	if err != nil {

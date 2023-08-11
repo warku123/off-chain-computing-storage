@@ -19,13 +19,13 @@ func (v *Image_api) PublishImageTable() (err error) {
 	return nil
 }
 
-func (v *Image_api) AddImage(image_path, timestamp string) (cid string, idx int, err error) {
+func (v *Image_api) AddImage(image_path string, height uint64) (cid string, idx int, err error) {
 	cid, err = v.ipfs_api.AddFile(image_path)
 	if err != nil {
 		return "", -1, err
 	}
 
-	idx, err = v.image_table.AddImageTuple(cid, timestamp, v.task_name)
+	idx, err = v.image_table.AddImageTuple(cid, height, v.task_name)
 	if err != nil {
 		return "", -1, err
 	}
@@ -50,25 +50,25 @@ func (v *Image_api) AddImage(image_path, timestamp string) (cid string, idx int,
 	return cid, idx, nil
 }
 
-func (v *Image_api) GetImageByIdx(idx int, outdir string) (timestamp string, err error) {
-	cid, timestamp, err := v.image_table.GetImageTuple(v.task_name, idx)
+func (v *Image_api) GetImageByIdx(idx int, outdir string) (height uint64, err error) {
+	cid, height, err := v.image_table.GetImageTuple(v.task_name, idx)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
 	err = v.ipfs_api.GetFile(cid, outdir)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
-	return timestamp, nil
+	return height, nil
 }
 
-func (v *Image_api) GetTimeStamp(idx int) (timestamp string, err error) {
-	_, timestamp, err = v.image_table.GetImageTuple(v.task_name, idx)
+func (v *Image_api) GetHeight(idx int) (height uint64, err error) {
+	_, height, err = v.image_table.GetImageTuple(v.task_name, idx)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
-	return timestamp, nil
+	return height, nil
 }
 
 func (v *Image_api) GetImageByCid(cid, outdir string) (err error) {
@@ -92,15 +92,15 @@ func (v *Image_api) CatImageByCid(cid string) (image string, err error) {
 	return finalStr, nil
 }
 
-func (v *Image_api) CatImageByIdx(idx int) (image string, timestamp string, err error) {
-	cid, timestamp, err := v.image_table.GetImageTuple(v.task_name, idx)
+func (v *Image_api) CatImageByIdx(idx int) (image string, height uint64, err error) {
+	cid, height, err := v.image_table.GetImageTuple(v.task_name, idx)
 	if err != nil {
-		return "", "", err
+		return "", 0, err
 	}
 
 	content, err := v.CatImageByCid(cid)
 	if err != nil {
-		return "", "", err
+		return "", 0, err
 	}
-	return content, timestamp, nil
+	return content, height, nil
 }

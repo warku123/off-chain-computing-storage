@@ -9,7 +9,7 @@ import (
 	"offstorage/utils"
 	"os"
 	"path"
-	"time"
+	"strconv"
 )
 
 // Custom data structure to represent the session
@@ -147,7 +147,7 @@ func CatImageByIdx(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	imageData, timestamp, err := sessionData.Ish.CatImageByIdx(int(idx))
+	imageData, height, err := sessionData.Ish.CatImageByIdx(int(idx))
 	if err != nil {
 		http.Error(w, "Error getting image", http.StatusInternalServerError)
 		return
@@ -155,7 +155,7 @@ func CatImageByIdx(w http.ResponseWriter, r *http.Request) {
 
 	responseData := map[string]interface{}{
 		"image_data": imageData,
-		"timestamp":  timestamp,
+		"height":     height,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -251,7 +251,7 @@ func GetImageByIdx(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, destFilePath)
 }
 
-func GetTimeStampByIdx(w http.ResponseWriter, r *http.Request) {
+func GetHeightByIdx(w http.ResponseWriter, r *http.Request) {
 	sessionID := r.URL.Query().Get("session_id")
 
 	// Load the session from the sessionStore
@@ -283,14 +283,14 @@ func GetTimeStampByIdx(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	timestamp, err := session.Ish.GetTimeStamp(int(idx))
+	height, err := session.Ish.GetHeight(int(idx))
 	if err != nil {
-		http.Error(w, "Failed to get timestamp:"+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to get height:"+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	responseData := map[string]interface{}{
-		"timestamp": timestamp,
+		"height": height,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -335,13 +335,14 @@ func AddImageString(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	timestamp, ok := requestData["timestamp"].(string)
+	height, ok := requestData["height"].(float64)
 	if !ok {
-		timestamp = fmt.Sprint(time.Now().Unix())
+		http.Error(w, "Invalid height", http.StatusBadRequest)
+		return
 	}
 
 	// Use IPFS Shell's Add method to write data to IPFS
-	cid, idx, err := session.Ish.AddImage(tmp_path, timestamp)
+	cid, idx, err := session.Ish.AddImage(tmp_path, uint64(height))
 	if err != nil {
 		http.Error(w, "Failed to write data to IPFS", http.StatusInternalServerError)
 		return
@@ -383,7 +384,7 @@ func AddImageFile(w http.ResponseWriter, r *http.Request) {
 
 	file, fileHeader, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, "Failed to get file from request", http.StatusBadRequest)
+		http.Error(w, "Failed to get file from request: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
@@ -405,15 +406,17 @@ func AddImageFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	timestamp := r.FormValue("timestamp")
-	if timestamp == "" {
-		timestamp = fmt.Sprint(time.Now().Unix())
+	s_height := r.Form.Get("height")
+	height, err := strconv.ParseUint(s_height, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid height: "+err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	// Use IPFS Shell's Add method to write data to IPFS
-	cid, idx, err := session.Ish.AddImage(destFilePath, timestamp)
+	cid, idx, err := session.Ish.AddImage(destFilePath, height)
 	if err != nil {
-		http.Error(w, "Failed to write data to IPFS", http.StatusInternalServerError)
+		http.Error(w, "Failed to write data to IPFS: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 

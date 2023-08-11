@@ -28,7 +28,7 @@ func Listener() {
 	router.HandleFunc("/image/getbyidx", GetImageByIdx)
 	router.HandleFunc("/image/getbycid", GetImageByCid)
 	router.HandleFunc("/image/getroothash", GetMTreeRootHash)
-	router.HandleFunc("/image/gettimestamp", GetTimeStampByIdx)
+	router.HandleFunc("/image/getheight", GetHeightByIdx)
 	router.HandleFunc("/image/close", CloseImage)
 
 	// Start the HTTP server on port 8080
