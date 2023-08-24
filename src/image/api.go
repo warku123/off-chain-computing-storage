@@ -25,7 +25,7 @@ func (v *Image_api) AddImage(image_path string, height uint64) (cid string, idx 
 		return "", -1, err
 	}
 
-	idx, err = v.image_table.AddImageTuple(cid, height, v.task_name)
+	idx, err = v.image_table.AddImageTuple(cid, height, v.task_owner, v.task_name)
 	if err != nil {
 		return "", -1, err
 	}
@@ -51,7 +51,7 @@ func (v *Image_api) AddImage(image_path string, height uint64) (cid string, idx 
 }
 
 func (v *Image_api) GetImageByIdx(idx int, outdir string) (height uint64, err error) {
-	cid, height, err := v.image_table.GetImageTuple(v.task_name, idx)
+	cid, height, err := v.image_table.GetImageTuple(v.task_owner, v.task_name, idx)
 	if err != nil {
 		return 0, err
 	}
@@ -64,7 +64,7 @@ func (v *Image_api) GetImageByIdx(idx int, outdir string) (height uint64, err er
 }
 
 func (v *Image_api) GetHeight(idx int) (height uint64, err error) {
-	_, height, err = v.image_table.GetImageTuple(v.task_name, idx)
+	_, height, err = v.image_table.GetImageTuple(v.task_owner, v.task_name, idx)
 	if err != nil {
 		return 0, err
 	}
@@ -93,7 +93,7 @@ func (v *Image_api) CatImageByCid(cid string) (image string, err error) {
 }
 
 func (v *Image_api) CatImageByIdx(idx int) (image string, height uint64, err error) {
-	cid, height, err := v.image_table.GetImageTuple(v.task_name, idx)
+	cid, height, err := v.image_table.GetImageTuple(v.task_owner, v.task_name, idx)
 	if err != nil {
 		return "", 0, err
 	}

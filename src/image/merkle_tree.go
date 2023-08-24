@@ -28,7 +28,7 @@ func (v *Image_api) BuildTree() (err error) {
 		return nil
 	}
 
-	for _, image := range (*v.image_table)[v.task_name] {
+	for _, image := range (*v.image_table)[v.task_owner][v.task_name].Images {
 		content = append(content, image)
 	}
 

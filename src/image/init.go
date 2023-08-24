@@ -13,6 +13,7 @@ type Image_api struct {
 	ipfs_api *ipfs.Ipfs_api
 
 	// image存储部分所需变量
+	task_owner       string // 任务所有者，用于索引对应快照
 	task_name        string // 任务名，用于索引对应快照
 	image_key_name   string
 	image_ipns_name  string
@@ -45,6 +46,12 @@ func NewImageShell(mod ...ModImageApi) (api *Image_api, err error) {
 	}
 
 	return api, nil
+}
+
+func ImageWithOwnerName(name string) ModImageApi {
+	return func(api *Image_api) {
+		api.task_owner = name
+	}
 }
 
 func ImageWithTaskName(name string) ModImageApi {

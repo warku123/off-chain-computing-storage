@@ -50,6 +50,7 @@ func CreateImage(w http.ResponseWriter, r *http.Request) {
 		image.ImageWithKeyName(data["keyName"].(string)),
 		image.ImageWithIpnsName(data["ipnsName"].(string)),
 		image.ImageWithTaskName(data["taskName"].(string)),
+		image.ImageWithOwnerName(data["ownerName"].(string)),
 		image.ImageWithLocalPath(local_path),
 	)
 

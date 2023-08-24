@@ -36,7 +36,8 @@ func TestAddImage(t *testing.T) {
 	image_api, err := image.NewImageShell(
 		image.ImageWithHost("127.0.0.1"),
 		image.ImageWithPort(5001),
-		image.ImageWithTaskName("hey"),
+		image.ImageWithOwnerName("test_owner"),
+		image.ImageWithTaskName("test_task"),
 		image.ImageWithKeyName("test"),
 		image.ImageWithIpnsName("k51qzi5uqu5dh3d6te4990h45jqr4mbh4e7om7ao88pvsfhi3qct15av2gwx5p"),
 		image.ImageWithLocalPath("/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile"),
