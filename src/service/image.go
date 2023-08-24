@@ -462,6 +462,82 @@ func GetMTreeRootHash(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(responseData)
 }
 
+func GetImageList(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.URL.Query().Get("session_id")
+
+	// Load the session from the sessionStore
+	sessionObj, exists := sessionStore.Load(sessionID)
+	if !exists {
+		http.Error(w, "Session not found", http.StatusNotFound)
+		return
+	}
+
+	// Type assertion to retrieve the session object from sync.Map
+	session, ok := sessionObj.(*ImageSession)
+	if !ok {
+		http.Error(w, "Invalid session object", http.StatusInternalServerError)
+		return
+	}
+
+	imageList, err := session.Ish.GetImageList()
+	if err != nil {
+		http.Error(w, "Error getting image list", http.StatusInternalServerError)
+		return
+	}
+
+	responseData := map[string]interface{}{
+		"image_list": imageList,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(responseData)
+}
+
+func GarbageCollection(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.URL.Query().Get("session_id")
+
+	// Load the session from the sessionStore
+	sessionObj, exists := sessionStore.Load(sessionID)
+	if !exists {
+		http.Error(w, "Session not found", http.StatusNotFound)
+		return
+	}
+
+	// Type assertion to retrieve the session object from sync.Map
+	session, ok := sessionObj.(*ImageSession)
+	if !ok {
+		http.Error(w, "Invalid session object", http.StatusInternalServerError)
+		return
+	}
+
+	var requestData map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, "Invalid JSON data", http.StatusBadRequest)
+		return
+	}
+
+	// Get the data from the request
+	thershold, ok := requestData["thershold"].(float64)
+	if !ok {
+		http.Error(w, "Invalid index", http.StatusBadRequest)
+		return
+	}
+
+	err = session.Ish.GarbageCollection(uint64(thershold))
+	if err != nil {
+		http.Error(w, "Error garbage collection", http.StatusInternalServerError)
+		return
+	}
+
+	responseData := map[string]interface{}{
+		"message": "Garbage collection success",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(responseData)
+}
+
 // CloseSession closes a session and removes it from the sessionStore
 func CloseImage(w http.ResponseWriter, r *http.Request) {
 	sessionID := r.URL.Query().Get("session_id")

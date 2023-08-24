@@ -72,3 +72,28 @@ func (v *ImageTable) SaveImageTable(image_dir string) error {
 	}
 	return err
 }
+
+func (v *ImageTable) GetOwnerImages(task_owner string, task_name string) (result map[string]string, err error) {
+	result = make(map[string]string)
+	for _, image := range (*v)[task_owner][task_name].Images {
+		result[task_owner] = image.Hash
+	}
+	return result, nil
+}
+
+func (v *ImageTable) GarbageCollection(task_owner string, task_name string, thershold uint64) error {
+	// 从前往后找
+	entry := (*v)[task_owner][task_name]
+	i := 0
+	for i = 0; i < len((*v)[task_owner][task_name].Images); i++ {
+		if (*v)[task_owner][task_name].Images[i].Height <= thershold {
+			entry.Offset += 1
+		} else {
+			break
+		}
+	}
+	entry.Images = entry.Images[i:]
+	(*v)[task_owner][task_name] = entry
+
+	return nil
+}

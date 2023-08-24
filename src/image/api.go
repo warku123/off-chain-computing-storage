@@ -104,3 +104,37 @@ func (v *Image_api) CatImageByIdx(idx int) (image string, height uint64, err err
 	}
 	return content, height, nil
 }
+
+func (v *Image_api) GetImageList() (result map[string]string, err error) {
+	result, err = v.image_table.GetOwnerImages(v.task_owner, v.task_name)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (v *Image_api) GarbageCollection(thershold uint64) error {
+	err := v.image_table.GarbageCollection(v.task_owner, v.task_name, thershold)
+	if err != nil {
+		return err
+	}
+
+	image_table_path := filepath.Join(v.image_local_path, v.image_ipns_name)
+	err = v.image_table.SaveImageTable(image_table_path)
+	if err != nil {
+		return err
+	}
+
+	err = v.PublishImageTable()
+	if err != nil {
+		return err
+	}
+
+	// build merkle tree
+	err = v.BuildTree()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
