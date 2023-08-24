@@ -1,6 +1,7 @@
 package image
 
 import (
+	"errors"
 	"offstorage/utils"
 )
 
@@ -61,7 +62,11 @@ func (v *ImageTable) AddImageTuple(hash string, height uint64, task_owner string
 
 func (v *ImageTable) GetImageTuple(task_owner string, task_name string, idx int) (hash string, height uint64, err error) {
 	offset := (*v)[task_owner][task_name].Offset
+	if idx-offset > len((*v)[task_owner][task_name].Images) || idx-offset < 0 {
+		return "", 0, errors.New("index out of range")
+	}
 	image_tuple := (*v)[task_owner][task_name].Images[idx-offset]
+
 	return image_tuple.Hash, image_tuple.Height, nil
 }
 
@@ -73,10 +78,13 @@ func (v *ImageTable) SaveImageTable(image_dir string) error {
 	return err
 }
 
-func (v *ImageTable) GetOwnerImages(task_owner string, task_name string) (result map[string]string, err error) {
+func (v *ImageTable) GetOwnerImages(task_owner string) (result map[string]string, err error) {
 	result = make(map[string]string)
-	for _, image := range (*v)[task_owner][task_name].Images {
-		result[task_owner] = image.Hash
+	for task_name, tuple := range (*v)[task_owner] {
+		if len(tuple.Images) == 0 {
+			continue
+		}
+		result[task_name] = tuple.Images[0].Hash
 	}
 	return result, nil
 }

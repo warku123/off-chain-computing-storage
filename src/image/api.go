@@ -106,7 +106,7 @@ func (v *Image_api) CatImageByIdx(idx int) (image string, height uint64, err err
 }
 
 func (v *Image_api) GetImageList() (result map[string]string, err error) {
-	result, err = v.image_table.GetOwnerImages(v.task_owner, v.task_name)
+	result, err = v.image_table.GetOwnerImages(v.task_owner)
 	if err != nil {
 		return nil, err
 	}
