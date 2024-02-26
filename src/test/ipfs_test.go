@@ -44,14 +44,14 @@ func TestIpfsPublish(t *testing.T) {
 	}
 
 	cid, err := api.AddFile(
-		"/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/k51qzi5uqu5dh3d6te4990h45jqr4mbh4e7om7ao88pvsfhi3qct15av2gwx5p",
+		"/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/k51qzi5uqu5did01y4bfh94mbd1olkqyyyj1hqhtrrqsxh97funiqyod9l2dx8",
 	)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
 	t.Logf(cid)
 
-	ipnsname, err := api.PublishFile(cid, "test")
+	ipnsname, err := api.PublishFile(cid, "image")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

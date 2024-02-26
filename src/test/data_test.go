@@ -12,7 +12,7 @@ func TestDataAddGet(t *testing.T) {
 		data.DataWithHost("127.0.0.1"),
 		data.DataWithPort(5001),
 		data.DataWithKeyName("data"),
-		data.DataWithIpnsName("k51qzi5uqu5dki16z7czuv0wjv47dpl112v5pqhiifqzkcje9dt42lvdk9paif"),
+		data.DataWithIpnsName("k51qzi5uqu5did01y4bfh94mbd1olkqyyyj1hqhtrrqsxh97funiqyod9l2dx8"),
 		data.DataWithLocalPath("/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/test_data"),
 		data.DataWithRole("executer"),
 	)
