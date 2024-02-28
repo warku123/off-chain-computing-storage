@@ -1,0 +1,36 @@
+version: '3.7'
+services:
+  ipfs_node_1:
+    image: ipfs/go-ipfs:latest
+    volumes:
+      - ./swarm.key:/data/ipfs/swarm.key
+      - ./entrypoint.sh:/entrypoint.sh
+      - ./image.key:/image.key
+      - ./data.key:/data.key
+    ports:
+      - "4001:4001"
+      - "8080:8080"
+      - "5001:5001"
+    networks:
+      - ipfs_network
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+
+  ipfs_node_2:
+    image: ipfs/go-ipfs:latest
+    volumes:
+      - ./swarm.key:/data/ipfs/swarm.key
+      - ./entrypoint.sh:/entrypoint.sh
+      - ./image.key:/image.key
+      - ./data.key:/data.key
+    ports:
+      - "4002:4001"
+      - "8081:8080"
+      - "5002:5001"
+    networks:
+      - ipfs_network
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+
+networks:
+  ipfs_network:
+    driver: bridge
+

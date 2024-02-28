@@ -74,6 +74,7 @@ func (v *Ipfs_api) PublishFile(cid, keyname string) (ipnsname string, err error)
 		24*time.Hour,
 		true,
 	)
+	fmt.Println("Publish file: /ipfs/" + cid + "to /ipns/" + response.Name)
 	if err != nil {
 		return "", err
 	}
