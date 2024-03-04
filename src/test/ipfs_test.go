@@ -51,7 +51,7 @@ func TestIpfsPublish(t *testing.T) {
 	}
 	t.Logf(cid)
 
-	ipnsname, err := api.PublishFile(cid, "image")
+	ipnsname, err := api.PublishFile(cid, "data")
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

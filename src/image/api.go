@@ -42,10 +42,10 @@ func (v *Image_api) AddImage(image_path string, height uint64) (cid string, idx 
 	}
 
 	// build merkle tree
-	err = v.BuildTree()
-	if err != nil {
-		return "", -1, err
-	}
+	// err = v.BuildTree()
+	// if err != nil {
+	// 	return "", -1, err
+	// }
 
 	return cid, idx, nil
 }

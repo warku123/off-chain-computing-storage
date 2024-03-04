@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -30,28 +31,46 @@ type WriteDataRequest struct {
 }
 
 func main() {
-	// 执行次数
-	iterations := 5
+	// 定义并发执行的次数
+	concurrencyLevel := 1000
+	maxConcurrency := 10
+
+	// 创建一个缓冲channel来限制并发数量
+	concurrencySemaphore := make(chan struct{}, maxConcurrency)
+
+	// 创建WaitGroup以等待所有goroutine完成
+	var wg sync.WaitGroup
+	wg.Add(concurrencyLevel)
 
 	// 记录开始时间
 	startTime := time.Now()
 
-	for i := 0; i < iterations; i++ {
-		// 创建SessionRequest实例
-		sessionReq := SessionRequest{
-			KeyName:   "image",
-			OwnerName: "pinge",
-			TaskName:  "efficency",
-			IpnsName:  "k51qzi5uqu5did01y4bfh94mbd1olkqyyyj1hqhtrrqsxh97funiqyod9l2dx8",
-			LocalPath: "/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile",
-		}
+	for i := 0; i < concurrencyLevel; i++ {
+		concurrencySemaphore <- struct{}{}
 
-		// 重复执行过程
-		err := runSessionAndWriteDataProcess(sessionReq, i)
-		if err != nil {
-			fmt.Println("过程执行错误:", err)
-		}
+		go func() {
+			defer wg.Done() // 在goroutine完成时通知WaitGroup
+			defer func() { <-concurrencySemaphore }()
+
+			// 创建SessionRequest实例
+			sessionReq := SessionRequest{
+				KeyName:   "image",
+				OwnerName: "pinge",
+				TaskName:  "api",
+				IpnsName:  "k51qzi5uqu5did01y4bfh94mbd1olkqyyyj1hqhtrrqsxh97funiqyod9l2dx8",
+				LocalPath: "/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile",
+			}
+
+			// 执行过程
+			err := runSessionAndWriteDataProcess(sessionReq, i)
+			if err != nil {
+				fmt.Println("过程执行错误:", err)
+			}
+		}()
 	}
+
+	// 等待所有goroutine完成
+	wg.Wait()
 
 	// 计算并打印总耗时
 	elapsedTime := time.Since(startTime)
