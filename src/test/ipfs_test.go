@@ -103,3 +103,35 @@ func TestIpfsPublishFolder(t *testing.T) {
 	finalStr := buf.String()
 	t.Logf(finalStr)
 }
+
+func TestIpfsGetFolder(t *testing.T) {
+	api, err := ipfs.NewShell(
+		ipfs.ShellWithPort(5001),
+		ipfs.ShellWithHost("127.0.0.1"),
+	)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	err = api.GetFolder("/ipns/k51qzi5uqu5dmda56zn5eiczlfymur9bvbha24qwvjkkcebvz3gy6z1c7a4l6j",
+		"/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/test_data")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+}
+
+func TestIpfsGetFile(t *testing.T) {
+	api, err := ipfs.NewShell(
+		ipfs.ShellWithPort(5001),
+		ipfs.ShellWithHost("127.0.0.1"),
+	)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+
+	err = api.GetFile("/ipns/k51qzi5uqu5did01y4bfh94mbd1olkqyyyj1hqhtrrqsxh97funiqyod9l2dx8",
+		"/Users/jojo/Documents/GitHub/off-chain-computing-storage/testfile/k51qzi5uqu5did01y4bfh94mbd1olkqyyyj1hqhtrrqsxh97funiqyod9l2dx8")
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+}

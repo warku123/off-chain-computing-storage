@@ -62,7 +62,58 @@ func (v *Ipfs_api) ReadFile(cid string) (string, error) {
 // 以cid寻址文件，下载到outdir
 func (v *Ipfs_api) GetFile(cid string, outdir string) (err error) {
 	err = v.Sh.Get(cid, outdir)
+	if err != nil {
+		return err
+	}
+
+	download_success := false
+	for !download_success {
+		download_id, err := v.AddFile(outdir)
+		if err != nil {
+			return err
+		}
+
+		ipfs_id, err := v.Sh.Resolve(cid)
+		if err != nil {
+			return err
+		}
+
+		if "/ipfs/"+download_id == ipfs_id {
+			download_success = true
+		} else {
+			time.Sleep(10 * time.Millisecond)
+		}
+	}
 	return err
+}
+
+func (v *Ipfs_api) GetFolder(cid string, outdir string) (err error) {
+	err = v.Sh.Get(cid, outdir)
+	if err != nil {
+		return err
+	}
+
+	download_success := false
+	for !download_success {
+		download_id, err := v.AddFolder(outdir)
+		if err != nil {
+			return err
+		}
+
+		ipfs_id, err := v.Sh.Resolve(cid)
+		if err != nil {
+			return err
+		}
+		// fmt.Println("download_id:" + download_id)
+		// fmt.Println("resolve_id:" + ipfs_id)
+		if "/ipfs/"+download_id == ipfs_id {
+			download_success = true
+		} else {
+			time.Sleep(10 * time.Millisecond)
+		}
+	}
+
+	return nil
 }
 
 // ipns发布镜像，返回ipns中的名字，输入ipfs中cid和keyname

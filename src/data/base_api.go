@@ -13,7 +13,7 @@ func (v *Data_api) GetDataFromIPFS() (err error) {
 	table_ipns_path := filepath.Join("/ipns/", v.data_ipns_name)
 	fmt.Printf("Download DB %s to %s \n", table_ipns_path, dest_dir)
 
-	err = v.ipfs_api.GetFile(table_ipns_path, dest_dir)
+	err = v.ipfs_api.GetFolder(table_ipns_path, dest_dir)
 	if err != nil {
 		return err
 	}
