@@ -2,7 +2,6 @@ package data
 
 import (
 	"errors"
-	"fmt"
 	"offstorage/utils"
 	"os"
 	"path/filepath"
@@ -45,7 +44,7 @@ func (v *Data_api) DataPersistance() (err error) {
 
 	for key, entry := range v.tables.Write_table {
 		cid := entry[len(entry)-1]
-		fmt.Println(1111)
+		// fmt.Println(1111)
 		err = v.db.AddCid(key, cid)
 		if err != nil {
 			return err
@@ -98,16 +97,17 @@ func (v *Data_api) DBGarbageCollection() (err error) {
 	}
 
 	for key, entry := range *(v.db) {
-		new_data_list := make([]Data, 0)
-		// 除了最后一个都需要检查
+		var i int
+		// 检查到第一个read_num不为0的数据，否则会造成读取错误
 		last := entry.Data_tuples[len(entry.Data_tuples)-1]
-		for i := 0; i < len(entry.Data_tuples)-1; i++ {
-			if entry.Data_tuples[i].Read_num > 0 {
-				new_data_list = append(new_data_list, entry.Data_tuples[i])
-			} else {
+		for i = 0; i < len(entry.Data_tuples)-1; i++ {
+			if entry.Data_tuples[i].Read_num == 0 {
 				entry.Gc_offset++
+			} else {
+				break
 			}
 		}
+		new_data_list := entry.Data_tuples[:i]
 		entry.Data_tuples = new_data_list
 		entry.Data_tuples = append(entry.Data_tuples, last)
 		(*(v.db))[key] = entry

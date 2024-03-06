@@ -52,9 +52,12 @@ func (v *Data_table) AddCid(name, hash string) (err error) {
 	return nil
 }
 
-func (v *Data_table) GetCid(name string, version int) string {
+func (v *Data_table) GetCid(name string, version int) (string, error) {
 	offset := (*v)[name].Gc_offset
-	return (*v)[name].Data_tuples[version-offset].Value_hash
+	if version-offset < 0 {
+		return "", errors.New("GetCid: version-offset < 0")
+	}
+	return (*v)[name].Data_tuples[version-offset].Value_hash, nil
 }
 
 func (v *Data_table) AddWriteNum(name string) error {

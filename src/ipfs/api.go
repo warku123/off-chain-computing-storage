@@ -66,6 +66,7 @@ func (v *Ipfs_api) GetFile(cid string, outdir string) (err error) {
 		return err
 	}
 
+	// 这个检测方法一旦当前本地文件夹中有远端的增量文件，就会出现问题
 	download_success := false
 	for !download_success {
 		download_id, err := v.AddFile(outdir)

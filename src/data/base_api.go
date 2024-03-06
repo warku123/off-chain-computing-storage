@@ -73,7 +73,10 @@ func (v *Data_api) GetDataCid(name string) (cid string, err error) {
 	if err != nil {
 		return "", err
 	}
-	cid = v.db.GetCid(name, data_version-1)
+	cid, err = v.db.GetCid(name, data_version-1)
+	if err != nil {
+		return "", err
+	}
 	err = v.db.AddReadNum(name, data_version-1)
 	if err != nil {
 		return "", err
